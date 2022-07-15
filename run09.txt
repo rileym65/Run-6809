@@ -1,0 +1,43 @@
+
+  ?              - dump memory
+  ?C             - Show clock ticks since last clock reset
+  ?C-            - Show clock ticks since last clock reset and reset
+  ?P             - dump memory from PC
+  ?S             - dump stack
+  $              - disassemble memory
+  $P             - disassemble memory from PC
+  !addr bb bb .. - store bytes at address
+  !P bb bb  ..   - store bytes at PC
+  @              - run at PC
+  @addr          - set PC to addr then run
+  A=nn           - set A to nn
+  B=nn           - set B to nn
+  B?             - show break points
+  B+addr         - add break point
+  B-addr         - remove break point
+  BC             - clear all breakpoints
+  C+expr         - Add conditional breakpoint
+  C-num          - Remove specified conditional breakpoint
+  C?             - Show conditional breakpoints
+  C++            - Enable conditional breakpoints
+  C--            - Disable conditional breakpoints
+  CC             - Clear all conditional breakpoints
+  CC=nn          - set CC register to nn
+  DP=nn          - set DP register to nn
+  F              - trigger FIRQ
+  I              - trigger IRQ
+  N              - trigger NMI
+  PC=addr        - set PC to addr
+  R              - Reset processor
+  S=bb           - set S to bb
+  T?             - show instruction traps
+  T+bb           - add instruction trap
+  T-bb           - remove instruction trap
+  TC             - clear all traps
+  TR+            - turn on command tracing
+  TR-            - turn off command tracing
+  U=nnnn         - set U to nnnn
+  X=nnnn         - set X to nnnn
+  Y=nnnn         - set Y to nnnn
+  /              - exit
+
