@@ -355,17 +355,17 @@ word Disassem(word addr, char* dest) {
                 break;
            case 0x83:
                 d = (ram[addr+2] << 8) | ram[addr+3];
-                sprintf(tmp,"83 %02x %02x      CMPD   #$%04x",ram[addr+2],ram[addr+3],d);
+                sprintf(tmp,"83 %02x %02x     CMPD   #$%04x",ram[addr+2],ram[addr+3],d);
                 addr += 4;
                 break;
            case 0x8c:
                 d = (ram[addr+2] << 8) | ram[addr+3];
-                sprintf(tmp,"8c %02x %02x      CMPY   #$%04x",ram[addr+2],ram[addr+3],d);
+                sprintf(tmp,"8c %02x %02x     CMPY   #$%04x",ram[addr+2],ram[addr+3],d);
                 addr += 4;
                 break;
            case 0x8e:
                 d = (ram[addr+2] << 8) | ram[addr+3];
-                sprintf(tmp,"8e %02x %02x      LDY    #$%04x",ram[addr+2],ram[addr+3],d);
+                sprintf(tmp,"8e %02x %02x     LDY    #$%04x",ram[addr+2],ram[addr+3],d);
                 addr += 4;
                 break;
            case 0x93:
@@ -1096,52 +1096,52 @@ word Disassem(word addr, char* dest) {
          addr += DisassemIndexed(addr, tmp);
          break;
     case 0xb0:
-         sprintf(tmp,"%02x %02x       SUBA   $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
+         sprintf(tmp,"%02x %02x        SUBA   $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
          addr += 3; break;
     case 0xb1:
-         sprintf(tmp,"%02x %02x       CMPA   $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
+         sprintf(tmp,"%02x %02x        CMPA   $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
          addr += 3; break;
     case 0xb2:
-         sprintf(tmp,"%02x %02x       SBCA   $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
+         sprintf(tmp,"%02x %02x        SBCA   $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
          addr += 3; break;
     case 0xb3:
-         sprintf(tmp,"%02x %02x       SUBD   $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
+         sprintf(tmp,"%02x %02x        SUBD   $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
          addr += 3; break;
     case 0xb4:
-         sprintf(tmp,"%02x %02x       ANDA   $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
+         sprintf(tmp,"%02x %02x        ANDA   $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
          addr += 3; break;
     case 0xb5:
-         sprintf(tmp,"%02x %02x       BITA   $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
+         sprintf(tmp,"%02x %02x        BITA   $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
          addr += 3; break;
     case 0xb6:
-         sprintf(tmp,"%02x %02x       LDA    $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
+         sprintf(tmp,"%02x %02x        LDA    $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
          addr += 3; break;
     case 0xb7:
-         sprintf(tmp,"%02x %02x       STA    $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
+         sprintf(tmp,"%02x %02x        STA    $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
          addr += 3; break;
     case 0xb8:
-         sprintf(tmp,"%02x %02x       EORA   $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
+         sprintf(tmp,"%02x %02x        EORA   $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
          addr += 3; break;
     case 0xb9:
-         sprintf(tmp,"%02x %02x       ADCA   $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
+         sprintf(tmp,"%02x %02x        ADCA   $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
          addr += 3; break;
     case 0xba:
-         sprintf(tmp,"%02x %02x       ORA    $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
+         sprintf(tmp,"%02x %02x        ORA    $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
          addr += 3; break;
     case 0xbb:
-         sprintf(tmp,"%02x %02x       ADDA   $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
+         sprintf(tmp,"%02x %02x        ADDA   $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
          addr += 3; break;
     case 0xbc:
-         sprintf(tmp,"%02x %02x       CMPX   $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
+         sprintf(tmp,"%02x %02x        CMPX   $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
          addr += 3; break;
     case 0xbd:
          sprintf(tmp,"%02x %02x        JSR    $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
          addr += 3; break;
     case 0xbe:
-         sprintf(tmp,"%02x %02x       LDX    $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
+         sprintf(tmp,"%02x %02x        LDX    $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
          addr += 3; break;
     case 0xbf:
-         sprintf(tmp,"%02x %02x       STX    $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
+         sprintf(tmp,"%02x %02x        STX    $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
          addr += 3; break;
     case 0xc0:
          sprintf(tmp,"%02x           SUBB   #$%02x",ram[addr+1],ram[addr+1]);
@@ -1311,52 +1311,52 @@ word Disassem(word addr, char* dest) {
          addr += DisassemIndexed(addr, tmp);
          break;
     case 0xf0:
-         sprintf(tmp,"%02x %02x       SUBB   $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
+         sprintf(tmp,"%02x %02x        SUBB   $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
          addr += 3; break;
     case 0xf1:
-         sprintf(tmp,"%02x %02x       CMPB   $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
+         sprintf(tmp,"%02x %02x        CMPB   $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
          addr += 3; break;
     case 0xf2:
-         sprintf(tmp,"%02x %02x       SBCB   $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
+         sprintf(tmp,"%02x %02x        SBCB   $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
          addr += 3; break;
     case 0xf3:
-         sprintf(tmp,"%02x %02x       ADDD   $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
+         sprintf(tmp,"%02x %02x        ADDD   $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
          addr += 3; break;
     case 0xf4:
-         sprintf(tmp,"%02x %02x       ANDB   $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
+         sprintf(tmp,"%02x %02x        ANDB   $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
          addr += 3; break;
     case 0xf5:
-         sprintf(tmp,"%02x %02x       BITB   $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
+         sprintf(tmp,"%02x %02x        BITB   $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
          addr += 3; break;
     case 0xf6:
-         sprintf(tmp,"%02x %02x       LDB    $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
+         sprintf(tmp,"%02x %02x        LDB    $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
          addr += 3; break;
     case 0xf7:
-         sprintf(tmp,"%02x %02x       STB    $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
+         sprintf(tmp,"%02x %02x        STB    $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
          addr += 3; break;
     case 0xf8:
-         sprintf(tmp,"%02x %02x       EORB   $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
+         sprintf(tmp,"%02x %02x        EORB   $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
          addr += 3; break;
     case 0xf9:
-         sprintf(tmp,"%02x %02x       ADCB   $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
+         sprintf(tmp,"%02x %02x        ADCB   $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
          addr += 3; break;
     case 0xfa:
-         sprintf(tmp,"%02x %02x       ORB    $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
+         sprintf(tmp,"%02x %02x        ORB    $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
          addr += 3; break;
     case 0xfb:
-         sprintf(tmp,"%02x %02x       ADDB   $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
+         sprintf(tmp,"%02x %02x        ADDB   $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
          addr += 3; break;
     case 0xfc:
-         sprintf(tmp,"%02x %02x       LDD    $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
+         sprintf(tmp,"%02x %02x        LDD    $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
          addr += 3; break;
     case 0xfd:
-         sprintf(tmp,"%02x %02x       STD    $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
+         sprintf(tmp,"%02x %02x        STD    $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
          addr += 3; break;
     case 0xfe:
-         sprintf(tmp,"%02x %02x       LDU    $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
+         sprintf(tmp,"%02x %02x        LDU    $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
          addr += 3; break;
     case 0xff:
-         sprintf(tmp,"%02x %02x       STU    $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
+         sprintf(tmp,"%02x %02x        STU    $%02x%02x",ram[addr+1],ram[addr+2],ram[addr+1],ram[addr+2]);
          addr += 3; break;
     default: 
          sprintf(tmp,"              DB   %02x",ram[addr]); addr++; break;
