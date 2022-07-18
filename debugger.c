@@ -194,8 +194,8 @@ void debugger_b(char* line) {
       cpu.b = GetHex(line);
       UpdateScreen();
       }
-    }
     return;
+    }
   if (*line == '+') {
     line++;
     addr = GetHex(line);
