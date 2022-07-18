@@ -581,406 +581,15 @@ void _PF(CPU *cpu) {                             /* CLR < */
   }
 
 void _P10(CPU *cpu) {
-  word a;
-  word b;
   byte c;
-  word d;
   c = readMem(ram, cpu->pc++);
-  switch (c) {
-    case 0x20:                                   /* LBRA */
-         d = readMem(ram, cpu->pc++) << 8;
-         d |= readMem(ram, cpu->pc++);
-         cpu->pc += d;
-         cpu->ts += 3;
-         break;
-    case 0x21:                                   /* LBRN */
-         cpu->pc += 2;
-         cpu->ts += 3;
-         break;
-    case 0x22:                                   /* LBHI */
-         d = readMem(ram, cpu->pc++) << 8;
-         d |= readMem(ram, cpu->pc++);
-         if ((cpu->cc & FLAG_C) == 0 && (cpu->cc & FLAG_Z) == 0) { cpu->pc += d; cpu->ts++; }
-         cpu->ts += 3;
-         break;
-    case 0x23:                                   /* LBLS */
-         d = readMem(ram, cpu->pc++) << 8;
-         d |= readMem(ram, cpu->pc++);
-         if ((cpu->cc & FLAG_C) != 0 || (cpu->cc & FLAG_Z) != 0) { cpu->pc += d; cpu->ts++; }
-         cpu->ts += 3;
-         break;
-    case 0x24:                                   /* LBCC */
-         d = readMem(ram, cpu->pc++) << 8;
-         d |= readMem(ram, cpu->pc++);
-         if ((cpu->cc & FLAG_C) == 0) { cpu->pc += d; cpu->ts++; }
-         cpu->ts += 3;
-         break;
-    case 0x25:                                   /* LBCS */
-         d = readMem(ram, cpu->pc++) << 8;
-         d |= readMem(ram, cpu->pc++);
-         if ((cpu->cc & FLAG_C) != 0) { cpu->pc += d; cpu->ts++; }
-         cpu->ts += 3;
-         break;
-    case 0x26:                                   /* LBNE */
-         d = readMem(ram, cpu->pc++) << 8;
-         d |= readMem(ram, cpu->pc++);
-         if ((cpu->cc & FLAG_Z) == 0) { cpu->pc += d; cpu->ts++; }
-         cpu->ts += 3;
-         break;
-    case 0x27:                                   /* LBEQ */
-         d = readMem(ram, cpu->pc++) << 8;
-         d |= readMem(ram, cpu->pc++);
-         if ((cpu->cc & FLAG_Z) != 0) { cpu->pc += d; cpu->ts++; }
-         cpu->ts += 3;
-         break;
-    case 0x28:                                   /* LBVC */
-         d = readMem(ram, cpu->pc++) << 8;
-         d |= readMem(ram, cpu->pc++);
-         if ((cpu->cc & FLAG_V) == 0) { cpu->pc += d; cpu->ts++; }
-         cpu->ts += 3;
-         break;
-    case 0x29:                                   /* LBVS */
-         d = readMem(ram, cpu->pc++) << 8;
-         d |= readMem(ram, cpu->pc++);
-         if ((cpu->cc & FLAG_V) != 0) { cpu->pc += d; cpu->ts++; }
-         cpu->ts += 3;
-         break;
-    case 0x2a:                                   /* LBPL */
-         d = readMem(ram, cpu->pc++) << 8;
-         d |= readMem(ram, cpu->pc++);
-         if ((cpu->cc & FLAG_N) == 0) { cpu->pc += d; cpu->ts++; }
-         cpu->ts += 3;
-         break;
-    case 0x2b:                                   /* LBMI */
-         d = readMem(ram, cpu->pc++) << 8;
-         d |= readMem(ram, cpu->pc++);
-         if ((cpu->cc & FLAG_N) != 0) { cpu->pc += d; cpu->ts++; }
-         cpu->ts += 3;
-         break;
-    case 0x2c:                                   /* LBGE */
-         d = readMem(ram, cpu->pc++) << 8;
-         d |= readMem(ram, cpu->pc++);
-         if (((cpu->cc >> 3) & 0x01) == ((cpu->cc >> 1) & 0x01)) { cpu->pc += d; cpu->ts++; }
-         cpu->ts += 3;
-         break;
-    case 0x2d:                                   /* LBLT */
-         d = readMem(ram, cpu->pc++) << 8;
-         d |= readMem(ram, cpu->pc++);
-         if (((cpu->cc >> 3) & 0x01) != ((cpu->cc >> 1) & 0x01)) { cpu->pc += d; cpu->ts++; }
-         cpu->ts += 3;
-         break;
-    case 0x2e:                                   /* LBGT */
-         d = readMem(ram, cpu->pc++) << 8;
-         d |= readMem(ram, cpu->pc++);
-         if (((cpu->cc & FLAG_Z) == 0) &&
-             (((cpu->cc >> 3) & 0x01) == ((cpu->cc >> 1) & 0x01))) { cpu->pc += d; cpu->ts++; }
-         cpu->ts += 3;
-         break;
-    case 0x2f:                                   /* LBLE */
-         d = readMem(ram, cpu->pc++) << 8;
-         d |= readMem(ram, cpu->pc++);
-         if (((cpu->cc & FLAG_Z) != 0) ||
-             (((cpu->cc >> 3) & 0x01) != ((cpu->cc >> 1) & 0x01))) { cpu->pc += d; cpu->ts++; }
-         cpu->ts += 3;
-         break;
-    case 0x3f:                                   /* SWI2 */
-         cpu->cc |= 0x80;
-         _6809_push(ram, cpu, cpu->pc & 0xff);
-         _6809_push(ram, cpu, cpu->pc >> 8);
-         _6809_push(ram, cpu, cpu->u & 0xff);
-         _6809_push(ram, cpu, cpu->u >> 8);
-         _6809_push(ram, cpu, cpu->y & 0xff);
-         _6809_push(ram, cpu, cpu->y >> 8);
-         _6809_push(ram, cpu, cpu->x & 0xff);
-         _6809_push(ram, cpu, cpu->x >> 8);
-         _6809_push(ram, cpu, cpu->dp);
-         _6809_push(ram, cpu, cpu->b);
-         _6809_push(ram, cpu, cpu->a);
-         _6809_push(ram, cpu, cpu->cc);
-         cpu->ts += 18;
-         cpu->pc = readMem(ram, 0xfff4) << 8;
-         cpu->pc |= readMem(ram, 0xfff5);
-         break;
-    case 0x83:                                   /* CMPD # */
-         b = (readMem(ram, cpu->pc) << 8) + readMem(ram, cpu->pc+1);
-         cpu->pc += 2;
-         d = (cpu->a << 8) | cpu->b;
-         _6809_sub16(cpu, d, b, 0);
-         cpu->ts += 3;
-         break;
-    case 0x8c:                                   /* CMPY # */
-         b = (readMem(ram, cpu->pc) << 8) + readMem(ram, cpu->pc+1);
-         cpu->pc += 2;
-         _6809_sub16(cpu, cpu->y, b, 0);
-         cpu->ts += 3;
-         break;
-    case 0x8e:                                   /* LDY # */
-         cpu->y = readMem(ram, cpu->pc++) << 8;
-         cpu->y |= readMem(ram, cpu->pc++);
-         if (cpu->y == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
-         if (cpu->y & 0x8000) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
-         cpu->cc &= (~FLAG_V);
-         cpu->ts += 2;
-         break;
-    case 0x93:                                   /* CMPD < */
-         a = cpu->dp << 8;
-         a |= readMem(ram, cpu->pc++);
-         b = readMem(ram, a++) << 8;
-         b |= readMem(ram, a);
-         d = (cpu->a << 8) | cpu->b;
-         _6809_sub16(cpu, d, b, 0);
-         cpu->ts += 5;
-         break;
-    case 0x9c:                                   /* CMPY < */
-         a = cpu->dp << 8;
-         a |= readMem(ram, cpu->pc++);
-         b = readMem(ram, a++) << 8;
-         b |= readMem(ram, a);
-         _6809_sub16(cpu, cpu->y, b, 0);
-         cpu->ts += 5;
-         break;
-    case 0x9e:                                   /* LDY < */
-         a = cpu->dp << 8;
-         a |= readMem(ram, cpu->pc++);
-         cpu->y = readMem(ram, a++) << 8;
-         cpu->y |= readMem(ram, a);
-         if (cpu->y == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
-         if (cpu->y & 0x8000) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
-         cpu->cc &= (~FLAG_V);
-         cpu->ts += 4;
-         break;
-    case 0x9f:                                   /* STY < */
-         a = cpu->dp << 8;
-         a |= readMem(ram, cpu->pc++);
-         writeMem(ram, a++, cpu->y >> 8);
-         writeMem(ram, a, cpu->y & 0xff);
-         if (cpu->y == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
-         if (cpu->y & 0x8000) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
-         cpu->cc &= (~FLAG_V);
-         cpu->ts += 4;
-         break;
-    case 0xa3:                                   /* CMPD , */
-         a = _6809_ea(cpu);
-         b = readMem(ram, a++) << 8;
-         b |= readMem(ram, a);
-         d = (cpu->a << 8) | cpu->b;
-         _6809_sub16(cpu, d, b, 0);
-         cpu->ts += 5;
-         break;
-    case 0xac:                                   /* CMPY , */
-         a = _6809_ea(cpu);
-         b = readMem(ram, a++) << 8;
-         b |= readMem(ram, a);
-         _6809_sub16(cpu, cpu->y, b, 0);
-         cpu->ts += 5;
-         break;
-    case 0xae:                                   /* LDY , */
-         a = _6809_ea(cpu);
-         cpu->y = readMem(ram, a++) << 8;
-         cpu->y |= readMem(ram, a);
-         if (cpu->y == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
-         if (cpu->y & 0x8000) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
-         cpu->cc &= (~FLAG_V);
-         cpu->ts += 4;
-         break;
-    case 0xaf:                                   /* STY , */
-         a = _6809_ea(cpu);
-         writeMem(ram, a++, cpu->y >> 8);
-         writeMem(ram, a, cpu->y & 0xff);
-         if (cpu->y == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
-         if (cpu->y & 0x8000) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
-         cpu->cc &= (~FLAG_V);
-         cpu->ts += 4;
-         break;
-    case 0xb3:                                   /* CMPD nnnn */
-         a = readMem(ram, cpu->pc++) << 8;
-         a |= readMem(ram, cpu->pc++);
-         b = readMem(ram, a++) << 8;
-         b |= readMem(ram, a);
-         d = (cpu->a << 8) | cpu->b;
-         _6809_sub16(cpu, d, b, 0);
-         cpu->ts += 6;
-         break;
-    case 0xbc:                                   /* CMPY nnnn */
-         a = readMem(ram, cpu->pc++) << 8;
-         a |= readMem(ram, cpu->pc++);
-         b = readMem(ram, a++) << 8;
-         b |= readMem(ram, a);
-         _6809_sub16(cpu, cpu->y, b, 0);
-         cpu->ts += 6;
-         break;
-    case 0xbe:                                   /* LDY nnnn */
-         a = readMem(ram, cpu->pc++) << 8;
-         a |= readMem(ram, cpu->pc++);
-         cpu->y = readMem(ram, a++) << 8;
-         cpu->y |= readMem(ram, a);
-         if (cpu->y == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
-         if (cpu->y & 0x8000) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
-         cpu->cc &= (~FLAG_V);
-         cpu->ts += 5;
-         break;
-    case 0xbf:                                   /* STY nnnn */
-         a = readMem(ram, cpu->pc++) << 8;
-         a |= readMem(ram, cpu->pc++);
-         writeMem(ram, a++, cpu->y >> 8);
-         writeMem(ram, a, cpu->y & 0xff);
-         if (cpu->y == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
-         if (cpu->y & 0x8000) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
-         cpu->cc &= (~FLAG_V);
-         cpu->ts += 5;
-         break;
-    case 0xce:                                   /* LDS # */
-         cpu->s = readMem(ram, cpu->pc++) << 8;
-         cpu->s |= readMem(ram, cpu->pc++);
-         if (cpu->s == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
-         if (cpu->s & 0x8000) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
-         cpu->cc &= (~FLAG_V);
-         cpu->ts += 2;
-         break;
-    case 0xde:                                   /* LDS < */
-         a = cpu->dp << 8;
-         a |= readMem(ram, cpu->pc++);
-         cpu->s = readMem(ram, a++) << 8;
-         cpu->s |= readMem(ram, a);
-         if (cpu->s == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
-         if (cpu->s & 0x8000) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
-         cpu->cc &= (~FLAG_V);
-         cpu->ts += 4;
-         break;
-    case 0xdf:                                   /* STS < */
-         a = cpu->dp << 8;
-         a |= readMem(ram, cpu->pc++);
-         writeMem(ram, a++, cpu->s >> 8);
-         writeMem(ram, a, cpu->s & 0xff);
-         if (cpu->s == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
-         if (cpu->s & 0x8000) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
-         cpu->cc &= (~FLAG_V);
-         cpu->ts += 4;
-         break;
-    case 0xee:                                   /* LDS , */
-         a = _6809_ea(cpu);
-         cpu->s = readMem(ram, a++) << 8;
-         cpu->s |= readMem(ram, a);
-         if (cpu->s == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
-         if (cpu->s & 0x8000) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
-         cpu->cc &= (~FLAG_V);
-         cpu->ts += 4;
-         break;
-    case 0xef:                                   /* STS , */
-         a = _6809_ea(cpu);
-         writeMem(ram, a++, cpu->s >> 8);
-         writeMem(ram, a, cpu->s & 0xff);
-         if (cpu->s == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
-         if (cpu->s & 0x8000) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
-         cpu->cc &= (~FLAG_V);
-         cpu->ts += 4;
-         break;
-    case 0xfe:                                   /* LDS nnnn */
-         a = readMem(ram, cpu->pc++) << 8;
-         a |= readMem(ram, cpu->pc++);
-         cpu->s = readMem(ram, a++) << 8;
-         cpu->s |= readMem(ram, a);
-         if (cpu->s == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
-         if (cpu->s & 0x8000) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
-         cpu->cc &= (~FLAG_V);
-         cpu->ts += 5;
-         break;
-    case 0xff:                                   /* STS nnnn */
-         a = readMem(ram, cpu->pc++) << 8;
-         a |= readMem(ram, cpu->pc++);
-         writeMem(ram, a++, cpu->s >> 8);
-         writeMem(ram, a, cpu->s & 0xff);
-         if (cpu->s == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
-         if (cpu->s & 0x8000) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
-         cpu->cc &= (~FLAG_V);
-         cpu->ts += 5;
-         break;
-    }
+  cpu->Inst10[c](cpu);
   }
 
 void _P11(CPU *cpu) {
-  word a;
-  word b;
   byte c;
   c = readMem(ram, cpu->pc++);
-  switch (c) {
-    case 0x3f:                                   /* SWI3 */
-         cpu->cc |= 0x80;
-         _6809_push(ram, cpu, cpu->pc & 0xff);
-         _6809_push(ram, cpu, cpu->pc >> 8);
-         _6809_push(ram, cpu, cpu->u & 0xff);
-         _6809_push(ram, cpu, cpu->u >> 8);
-         _6809_push(ram, cpu, cpu->y & 0xff);
-         _6809_push(ram, cpu, cpu->y >> 8);
-         _6809_push(ram, cpu, cpu->x & 0xff);
-         _6809_push(ram, cpu, cpu->x >> 8);
-         _6809_push(ram, cpu, cpu->dp);
-         _6809_push(ram, cpu, cpu->b);
-         _6809_push(ram, cpu, cpu->a);
-         _6809_push(ram, cpu, cpu->cc);
-         cpu->ts += 18;
-         cpu->pc = readMem(ram, 0xfff2) << 8;
-         cpu->pc |= readMem(ram, 0xfff3);
-         break;
-    case 0x83:                                   /* CMPU # */
-         b = (readMem(ram, cpu->pc) << 8) + readMem(ram, cpu->pc+1);
-         cpu->pc += 2;
-         _6809_sub16(cpu, cpu->u, b, 0);
-         cpu->ts += 3;
-         break;
-    case 0x8c:                                   /* CMPS # */
-         b = (readMem(ram, cpu->pc) << 8) + readMem(ram, cpu->pc+1);
-         cpu->pc += 2;
-         _6809_sub16(cpu, cpu->s, b, 0);
-         cpu->ts += 3;
-         break;
-    case 0x93:                                   /* CMPU < */
-         a = cpu->dp << 8;
-         a |= readMem(ram, cpu->pc++);
-         b = readMem(ram, a++) << 8;
-         b |= readMem(ram, a);
-         _6809_sub16(cpu, cpu->u, b, 0);
-         cpu->ts += 5;
-         break;
-    case 0x9c:                                   /* CMPS < */
-         a = cpu->dp << 8;
-         a |= readMem(ram, cpu->pc++);
-         b = readMem(ram, a++) << 8;
-         b |= readMem(ram, a);
-         _6809_sub16(cpu, cpu->s, b, 0);
-         cpu->ts += 5;
-         break;
-    case 0xa3:                                   /* CMPU , */
-         a = _6809_ea(cpu);
-         b = readMem(ram, a++) << 8;
-         b |= readMem(ram, a);
-         _6809_sub16(cpu, cpu->u, b, 0);
-         cpu->ts += 5;
-         break;
-    case 0xac:                                   /* CMPS , */
-         a = _6809_ea(cpu);
-         b = readMem(ram, a++) << 8;
-         b |= readMem(ram, a);
-         _6809_sub16(cpu, cpu->s, b, 0);
-         cpu->ts += 5;
-         break;
-    case 0xb3:                                   /* CMPU nnnn */
-         a = readMem(ram, cpu->pc++) << 8;
-         a |= readMem(ram, cpu->pc++);
-         b = readMem(ram, a++) << 8;
-         b |= readMem(ram, a);
-         _6809_sub16(cpu, cpu->u, b, 0);
-         cpu->ts += 6;
-         break;
-    case 0xbc:                                   /* CMPS nnnn */
-         a = readMem(ram, cpu->pc++) << 8;
-         a |= readMem(ram, cpu->pc++);
-         b = readMem(ram, a++) << 8;
-         b |= readMem(ram, a);
-         _6809_sub16(cpu, cpu->s, b, 0);
-         cpu->ts += 6;
-         break;
-    }
+  cpu->Inst11[c](cpu);
   }
 
 void _P12(CPU *cpu) {
@@ -1052,7 +661,10 @@ void _P1E(CPU *cpu) {                            /* EXG */
   word d;
   word *w1,*w2;
   byte *b1,*b2;
+  char a1,a2;
   b = readMem(ram, cpu->pc++);
+  a1 = ((b & 0xf0) >= 0x80) ? 'B' : 'W';
+  a2 = ((b & 0x0f) >= 0x08) ? 'B' : 'W';
   switch (b & 0xf0) {
     case 0x00: w1 = &d; d = (cpu->a << 8) | cpu->b; break;
     case 0x10: w1 = &cpu->x; break;
@@ -1077,15 +689,28 @@ void _P1E(CPU *cpu) {                            /* EXG */
     case 0x0a: b2 = &cpu->cc; break;
     case 0x0b: b2 = &cpu->dp; break;
     }
-  if (((b & 0xf0) < 0x60) && ((b &0x0f) < 0x06)) {
+  if (a1 == 'W' && a2 == 'W') {
     tw = *w1;
     *w1 = *w2;
     *w2 = tw;
     }
-  if (((b & 0xf0) > 0x60) && ((b &0x0f) > 0x06)) {
+  if (a1 == 'B' && a2 == 'B') {
     tb = *b1;
     *b1 = *b2;
     *b2 = tb;
+    }
+  if (a1 == 'W' && a2 == 'B') {
+    tw = *b2 | 0xff00;
+    *b2 = (*w1 & 0xff);
+    *w1 = tw;
+    }
+  if (a1 == 'B' && a2 == 'W') {
+    if (((b & 0xf0) == 0x80) || ((b & 0xf0) == 0x81))
+      tw = *b1 | 0xff00;
+    else
+      tw = *b1 | (*b1 << 8);
+    *b1 = (*w2 & 0xff);
+    *w2 = tw;
     }
   if (((b & 0xf0) == 0x00) || ((b & 0x0f) == 0x00)) {
     cpu->a = (d >> 8);
@@ -1099,7 +724,10 @@ void _P1F(CPU *cpu) {                            /* TFR r,r */
   word d;
   word *w1,*w2;
   byte *b1,*b2;
+  char a1,a2;
   b = readMem(ram, cpu->pc++);
+  a1 = ((b & 0xf0) >= 0x80) ? 'B' : 'W';
+  a2 = ((b & 0x0f) >= 0x08) ? 'B' : 'W';
   switch (b & 0xf0) {
     case 0x00: w1 = &d; d = (cpu->a << 8) | cpu->b; break;
     case 0x10: w1 = &cpu->x; break;
@@ -1124,11 +752,22 @@ void _P1F(CPU *cpu) {                            /* TFR r,r */
     case 0x0a: b2 = &cpu->cc; break;
     case 0x0b: b2 = &cpu->dp; break;
     }
-  if (((b & 0xf0) < 0x60) && ((b &0x0f) < 0x06)) {
+  if (a1 == 'W' && a2 == 'W') {
     *w2 = *w1;
     }
-  if (((b & 0xf0) > 0x60) && ((b &0x0f) > 0x06)) {
+  if (a1 == 'B' && a2 == 'B') {
     *b2 = *b1;
+    }
+  if (a1 == 'W' && a2 == 'B') {
+    *b2 = (*w1 & 0xff);
+    }
+  if (a1 == 'B' && a2 == 'W') {
+    if (((b & 0xf0) == 0x80) || ((b & 0xf0) == 0x81)) {
+      *w2 = (0xff00) | *b1;
+      }
+    else {
+      *w2 = (*b1 << 8) | *b1;
+      }
     }
   if (((b & 0xf0) == 0x00) || ((b & 0x0f) == 0x00)) {
     cpu->a = (d >> 8);
@@ -3207,6 +2846,9 @@ void cpu_prepare(CPU *cpu) {
   cpu->Inst[0xf4]=_PF4; cpu->Inst[0xf5]=_PF5; cpu->Inst[0xf6]=_PF6; cpu->Inst[0xf7]=_PF7;
   cpu->Inst[0xf8]=_PF8; cpu->Inst[0xf9]=_PF9; cpu->Inst[0xfa]=_PFA; cpu->Inst[0xfb]=_PFB;
   cpu->Inst[0xfc]=_PFC; cpu->Inst[0xfd]=_PFD; cpu->Inst[0xfe]=_PFE; cpu->Inst[0xff]=_PFF;
+
+  cpu_prepare_10(cpu);
+  cpu_prepare_11(cpu);
   }
 
 void cpu_firq(CPU* cpu) {

@@ -30,6 +30,8 @@ typedef struct _CPU {
   byte ts;
   byte halt;
   void (*Inst[256])(struct _CPU *cpu);
+  void (*Inst10[256])(struct _CPU *cpu);
+  void (*Inst11[256])(struct _CPU *cpu);
   } CPU;
 
 #endif

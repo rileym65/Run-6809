@@ -7,6 +7,8 @@ LIBS=
 LIBDIR=
 OBJS=\
 	cpu.o \
+	cpu10.o \
+	cpu11.o \
 	debugger.o \
 	disassem.o \
 	evaluate.o \
@@ -24,6 +26,8 @@ clean:
 	-rm $(PROJECT)
 
 cpu.o:       cpu.h header.h cpu.c
+cpu10.o:     cpu.h header.h cpu10.c
+cpu11.o:     cpu.h header.h cpu11.c
 debugger.o:  cpu.h header.h debugger.c
 disassem.o:  cpu.h header.h disassem.c
 evaluate.o:  cpu.h header.h evaluate.c
