@@ -102,12 +102,12 @@ void _P10_20(CPU *cpu) {                         /* LBRA */
   d = readMem(ram, cpu->pc++) << 8;
   d |= readMem(ram, cpu->pc++);
   cpu->pc += d;
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 4 : 5;
   }
 
 void _P10_21(CPU *cpu) {                         /* LBRN */
   cpu->pc += 2;
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 5 : 5;
   }
 
 void _P10_22(CPU *cpu) {                         /* LBHI */
@@ -115,7 +115,7 @@ void _P10_22(CPU *cpu) {                         /* LBHI */
   d = readMem(ram, cpu->pc++) << 8;
   d |= readMem(ram, cpu->pc++);
   if ((cpu->cc & FLAG_C) == 0 && (cpu->cc & FLAG_Z) == 0) { cpu->pc += d; cpu->ts++; }
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 5 : 5;
   }
 
 void _P10_23(CPU *cpu) {                         /* LBLS */
@@ -123,7 +123,7 @@ void _P10_23(CPU *cpu) {                         /* LBLS */
   d = readMem(ram, cpu->pc++) << 8;
   d |= readMem(ram, cpu->pc++);
   if ((cpu->cc & FLAG_C) != 0 || (cpu->cc & FLAG_Z) != 0) { cpu->pc += d; cpu->ts++; }
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 5 : 5;
   }
 
 void _P10_24(CPU *cpu) {                         /* LBCC */
@@ -131,7 +131,7 @@ void _P10_24(CPU *cpu) {                         /* LBCC */
   d = readMem(ram, cpu->pc++) << 8;
   d |= readMem(ram, cpu->pc++);
   if ((cpu->cc & FLAG_C) == 0) { cpu->pc += d; cpu->ts++; }
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 5 : 5;
   }
 
 void _P10_25(CPU *cpu) {                         /* LBCS */
@@ -139,7 +139,7 @@ void _P10_25(CPU *cpu) {                         /* LBCS */
   d = readMem(ram, cpu->pc++) << 8;
   d |= readMem(ram, cpu->pc++);
   if ((cpu->cc & FLAG_C) != 0) { cpu->pc += d; cpu->ts++; }
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 5 : 5;
   }
 
 void _P10_26(CPU *cpu) {                         /* LBNE */
@@ -147,7 +147,7 @@ void _P10_26(CPU *cpu) {                         /* LBNE */
   d = readMem(ram, cpu->pc++) << 8;
   d |= readMem(ram, cpu->pc++);
   if ((cpu->cc & FLAG_Z) == 0) { cpu->pc += d; cpu->ts++; }
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 5 : 5;
   }
 
 void _P10_27(CPU *cpu) {                         /* LBEQ */
@@ -155,7 +155,7 @@ void _P10_27(CPU *cpu) {                         /* LBEQ */
   d = readMem(ram, cpu->pc++) << 8;
   d |= readMem(ram, cpu->pc++);
   if ((cpu->cc & FLAG_Z) != 0) { cpu->pc += d; cpu->ts++; }
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 5 : 5;
   }
 
 void _P10_28(CPU *cpu) {                         /* LBVC */
@@ -163,7 +163,7 @@ void _P10_28(CPU *cpu) {                         /* LBVC */
   d = readMem(ram, cpu->pc++) << 8;
   d |= readMem(ram, cpu->pc++);
   if ((cpu->cc & FLAG_V) == 0) { cpu->pc += d; cpu->ts++; }
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 5 : 5;
   }
 
 void _P10_29(CPU *cpu) {                         /* LBVS */
@@ -171,7 +171,7 @@ void _P10_29(CPU *cpu) {                         /* LBVS */
   d = readMem(ram, cpu->pc++) << 8;
   d |= readMem(ram, cpu->pc++);
   if ((cpu->cc & FLAG_V) != 0) { cpu->pc += d; cpu->ts++; }
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 5 : 5;
   }
 
 void _P10_2A(CPU *cpu) {                         /* LBPL */
@@ -179,7 +179,7 @@ void _P10_2A(CPU *cpu) {                         /* LBPL */
   d = readMem(ram, cpu->pc++) << 8;
   d |= readMem(ram, cpu->pc++);
   if ((cpu->cc & FLAG_N) == 0) { cpu->pc += d; cpu->ts++; }
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 5 : 5;
   }
 
 void _P10_2B(CPU *cpu) {                         /* LBMI */
@@ -187,7 +187,7 @@ void _P10_2B(CPU *cpu) {                         /* LBMI */
   d = readMem(ram, cpu->pc++) << 8;
   d |= readMem(ram, cpu->pc++);
   if ((cpu->cc & FLAG_N) != 0) { cpu->pc += d; cpu->ts++; }
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 5 : 5;
   }
 
 void _P10_2C(CPU *cpu) {                         /* LBGE */
@@ -195,7 +195,7 @@ void _P10_2C(CPU *cpu) {                         /* LBGE */
   d = readMem(ram, cpu->pc++) << 8;
   d |= readMem(ram, cpu->pc++);
   if (((cpu->cc >> 3) & 0x01) == ((cpu->cc >> 1) & 0x01)) { cpu->pc += d; cpu->ts++; }
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 5 : 5;
   }
 
 void _P10_2D(CPU *cpu) {                         /* LBLT */
@@ -203,7 +203,7 @@ void _P10_2D(CPU *cpu) {                         /* LBLT */
   d = readMem(ram, cpu->pc++) << 8;
   d |= readMem(ram, cpu->pc++);
   if (((cpu->cc >> 3) & 0x01) != ((cpu->cc >> 1) & 0x01)) { cpu->pc += d; cpu->ts++; }
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 5 : 5;
   }
 
 void _P10_2E(CPU *cpu) {                         /* LBGT */
@@ -212,7 +212,7 @@ void _P10_2E(CPU *cpu) {                         /* LBGT */
   d |= readMem(ram, cpu->pc++);
   if (((cpu->cc & FLAG_Z) == 0) &&
      (((cpu->cc >> 3) & 0x01) == ((cpu->cc >> 1) & 0x01))) { cpu->pc += d; cpu->ts++; }
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 5 : 5;
   }
 
 void _P10_2F(CPU *cpu) {                         /* LBLE */
@@ -221,7 +221,7 @@ void _P10_2F(CPU *cpu) {                         /* LBLE */
   d |= readMem(ram, cpu->pc++);
   if (((cpu->cc & FLAG_Z) != 0) ||
      (((cpu->cc >> 3) & 0x01) != ((cpu->cc >> 1) & 0x01))) { cpu->pc += d; cpu->ts++; }
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 5 : 5;
   }
 
 void _P10_30(CPU *cpu) {
@@ -280,10 +280,15 @@ void _P10_3F(CPU *cpu) {                         /* SWI2 */
   _6809_push(ram, cpu, cpu->x & 0xff);
   _6809_push(ram, cpu, cpu->x >> 8);
   _6809_push(ram, cpu, cpu->dp);
+  if (use6309 && (cpu->md & 1)) {
+    cpu->ts += 2;
+    _6809_push(ram, cpu, cpu->f);
+    _6809_push(ram, cpu, cpu->e);
+    }
   _6809_push(ram, cpu, cpu->b);
   _6809_push(ram, cpu, cpu->a);
   _6809_push(ram, cpu, cpu->cc);
-  cpu->ts += 18;
+  cpu->ts += (cpu->md & 1) ? 20 : 20;
   cpu->pc = readMem(ram, 0xfff4) << 8;
   cpu->pc |= readMem(ram, 0xfff5);
   }
@@ -496,7 +501,7 @@ void _P10_83(CPU *cpu) {                         /* CMPD # */
   cpu->pc += 2;
   d = (cpu->a << 8) | cpu->b;
   _6809_sub16(cpu, d, b, 0);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 4 : 5;
   }
 
 void _P10_84(CPU *cpu) {
@@ -528,7 +533,7 @@ void _P10_8C(CPU *cpu) {                         /* CMPY # */
   b = (readMem(ram, cpu->pc) << 8) + readMem(ram, cpu->pc+1);
   cpu->pc += 2;
   _6809_sub16(cpu, cpu->y, b, 0);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 4 : 5;
   }
 
 void _P10_8D(CPU *cpu) {
@@ -540,7 +545,7 @@ void _P10_8E(CPU *cpu) {                         /* LDY # */
   if (cpu->y == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->y & 0x8000) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 4 : 4;
   }
 
 void _P10_8F(CPU *cpu) {
@@ -565,7 +570,7 @@ void _P10_93(CPU *cpu) {                         /* CMPD < */
   b |= readMem(ram, a);
   d = (cpu->a << 8) | cpu->b;
   _6809_sub16(cpu, d, b, 0);
-  cpu->ts += 5;
+  cpu->ts += (cpu->md & 1) ? 5 : 7;
   }
 
 void _P10_94(CPU *cpu) {
@@ -600,7 +605,7 @@ void _P10_9C(CPU *cpu) {                         /* CMPY < */
   b = readMem(ram, a++) << 8;
   b |= readMem(ram, a);
   _6809_sub16(cpu, cpu->y, b, 0);
-  cpu->ts += 5;
+  cpu->ts += (cpu->md & 1) ? 5 : 7;
   }
 
 void _P10_9D(CPU *cpu) {
@@ -615,7 +620,7 @@ void _P10_9E(CPU *cpu) {                         /* LDY < */
   if (cpu->y == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->y & 0x8000) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 5 : 6;
   }
 
 void _P10_9F(CPU *cpu) {                         /* STY < */
@@ -627,7 +632,7 @@ void _P10_9F(CPU *cpu) {                         /* STY < */
   if (cpu->y == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->y & 0x8000) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 5 : 6;
   }
 
 void _P10_A0(CPU *cpu) {
@@ -648,7 +653,7 @@ void _P10_A3(CPU *cpu) {                         /* CMPD , */
   b |= readMem(ram, a);
   d = (cpu->a << 8) | cpu->b;
   _6809_sub16(cpu, d, b, 0);
-  cpu->ts += 5;
+  cpu->ts += (cpu->md & 1) ? 6 : 7;
   }
 
 void _P10_A4(CPU *cpu) {
@@ -682,7 +687,7 @@ void _P10_AC(CPU *cpu) {                         /* CMPY , */
   b = readMem(ram, a++) << 8;
   b |= readMem(ram, a);
   _6809_sub16(cpu, cpu->y, b, 0);
-  cpu->ts += 5;
+  cpu->ts += (cpu->md & 1) ? 6 : 7;
   }
 
 void _P10_AD(CPU *cpu) {
@@ -696,7 +701,7 @@ void _P10_AE(CPU *cpu) {                         /* LDY , */
   if (cpu->y == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->y & 0x8000) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 6 : 6;
   }
 
 void _P10_AF(CPU *cpu) {                         /* STY , */
@@ -707,7 +712,7 @@ void _P10_AF(CPU *cpu) {                         /* STY , */
   if (cpu->y == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->y & 0x8000) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 6 : 6;
   }
 
 void _P10_B0(CPU *cpu) {
@@ -729,7 +734,7 @@ void _P10_B3(CPU *cpu) {                         /* CMPD nnnn */
   b |= readMem(ram, a);
   d = (cpu->a << 8) | cpu->b;
   _6809_sub16(cpu, d, b, 0);
-  cpu->ts += 6;
+  cpu->ts += (cpu->md & 1) ? 6 : 8;
   }
 
 void _P10_B4(CPU *cpu) {
@@ -764,7 +769,7 @@ void _P10_BC(CPU *cpu) {                         /* CMPY nnnn */
   b = readMem(ram, a++) << 8;
   b |= readMem(ram, a);
   _6809_sub16(cpu, cpu->y, b, 0);
-  cpu->ts += 6;
+  cpu->ts += (cpu->md & 1) ? 6 : 8;
   }
 
 void _P10_BD(CPU *cpu) {
@@ -779,7 +784,7 @@ void _P10_BE(CPU *cpu) {                         /* LDY nnnn */
   if (cpu->y == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->y & 0x8000) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 5;
+  cpu->ts += (cpu->md & 1) ? 6 : 7;
   }
 
 void _P10_BF(CPU *cpu) {                         /* STY nnnn */
@@ -791,7 +796,7 @@ void _P10_BF(CPU *cpu) {                         /* STY nnnn */
   if (cpu->y == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->y & 0x8000) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 5;
+  cpu->ts += (cpu->md & 1) ? 6 : 7;
   }
 
 void _P10_C0(CPU *cpu) {
@@ -842,7 +847,7 @@ void _P10_CE(CPU *cpu) {                         /* LDS # */
   if (cpu->s == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->s & 0x8000) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 4 : 4;
   }
 
 void _P10_CF(CPU *cpu) {
@@ -899,7 +904,7 @@ void _P10_DE(CPU *cpu) {                         /* LDS < */
   if (cpu->s == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->s & 0x8000) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 5 : 6;
   }
 
 void _P10_DF(CPU *cpu) {                         /* STS < */
@@ -911,7 +916,7 @@ void _P10_DF(CPU *cpu) {                         /* STS < */
   if (cpu->s == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->s & 0x8000) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 5 : 6;
   }
 
 void _P10_E0(CPU *cpu) {
@@ -964,7 +969,7 @@ void _P10_EE(CPU *cpu) {                         /* LDS , */
   if (cpu->s == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->s & 0x8000) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 6 : 6;
   }
 
 void _P10_EF(CPU *cpu) {                         /* STS , */
@@ -975,7 +980,7 @@ void _P10_EF(CPU *cpu) {                         /* STS , */
   if (cpu->s == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->s & 0x8000) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 6 : 6;
   }
 
 void _P10_F0(CPU *cpu) {
@@ -1029,7 +1034,7 @@ void _P10_FE(CPU *cpu) {                         /* LDS nnnn */
   if (cpu->s == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->s & 0x8000) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 5;
+  cpu->ts += (cpu->md & 1) ? 6 : 7;
   }
 
 void _P10_FF(CPU *cpu) {                         /* STS nnnn */
@@ -1041,7 +1046,7 @@ void _P10_FF(CPU *cpu) {                         /* STS nnnn */
   if (cpu->s == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->s & 0x8000) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 5;
+  cpu->ts += (cpu->md & 1) ? 6 : 7;
   }
 
 void cpu_prepare_10(CPU *cpu) {

@@ -25,8 +25,11 @@ typedef struct _CPU {
   word y;
   byte a;
   byte b;
+  byte e;
+  byte f;
   byte dp;
   byte cc;
+  byte md;
   byte ts;
   byte halt;
   void (*Inst[256])(struct _CPU *cpu);

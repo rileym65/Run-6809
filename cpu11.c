@@ -201,12 +201,17 @@ void _P11_3F(CPU *cpu) {                         /* SWI3 */
   _6809_push(ram, cpu, cpu->x & 0xff);
   _6809_push(ram, cpu, cpu->x >> 8);
   _6809_push(ram, cpu, cpu->dp);
+  if (use6309 && (cpu->md & 1)) {
+    cpu->ts += 2;
+    _6809_push(ram, cpu, cpu->f);
+    _6809_push(ram, cpu, cpu->e);
+    }
   _6809_push(ram, cpu, cpu->b);
   _6809_push(ram, cpu, cpu->a);
   _6809_push(ram, cpu, cpu->cc);
-  cpu->ts += 18;
   cpu->pc = readMem(ram, 0xfff2) << 8;
   cpu->pc |= readMem(ram, 0xfff3);
+  cpu->ts += (cpu->md & 1) ? 20 : 20;
   }
 
 void _P11_40(CPU *cpu) {
@@ -415,7 +420,7 @@ void _P11_83(CPU *cpu) {                         /* CMPU # */
   b = (readMem(ram, cpu->pc) << 8) + readMem(ram, cpu->pc+1);
   cpu->pc += 2;
   _6809_sub16(cpu, cpu->u, b, 0);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 4 : 5;
   }
 
 void _P11_84(CPU *cpu) {
@@ -447,7 +452,7 @@ void _P11_8C(CPU *cpu) {                         /* CMPS # */
   b = (readMem(ram, cpu->pc) << 8) + readMem(ram, cpu->pc+1);
   cpu->pc += 2;
   _6809_sub16(cpu, cpu->s, b, 0);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 4 : 5;
   }
 
 void _P11_8D(CPU *cpu) {
@@ -476,7 +481,7 @@ void _P11_93(CPU *cpu) {                         /* CMPU < */
   b = readMem(ram, a++) << 8;
   b |= readMem(ram, a);
   _6809_sub16(cpu, cpu->u, b, 0);
-  cpu->ts += 5;
+  cpu->ts += (cpu->md & 1) ? 5 : 7;
   }
 
 void _P11_94(CPU *cpu) {
@@ -511,7 +516,7 @@ void _P11_9C(CPU *cpu) {                         /* CMPS < */
   b = readMem(ram, a++) << 8;
   b |= readMem(ram, a);
   _6809_sub16(cpu, cpu->s, b, 0);
-  cpu->ts += 5;
+  cpu->ts += (cpu->md & 1) ? 5 : 7;
   }
 
 void _P11_9D(CPU *cpu) {
@@ -539,7 +544,7 @@ void _P11_A3(CPU *cpu) {                         /* CMPU , */
   b = readMem(ram, a++) << 8;
   b |= readMem(ram, a);
   _6809_sub16(cpu, cpu->u, b, 0);
-  cpu->ts += 5;
+  cpu->ts += (cpu->md & 1) ? 6 : 7;
   }
 
 void _P11_A4(CPU *cpu) {
@@ -573,7 +578,7 @@ void _P11_AC(CPU *cpu) {                         /* CMPS , */
   b = readMem(ram, a++) << 8;
   b |= readMem(ram, a);
   _6809_sub16(cpu, cpu->s, b, 0);
-  cpu->ts += 5;
+  cpu->ts += (cpu->md & 1) ? 6 : 7;
   }
 
 void _P11_AD(CPU *cpu) {
@@ -602,7 +607,7 @@ void _P11_B3(CPU *cpu) {                         /* CMPU nnnn */
   b = readMem(ram, a++) << 8;
   b |= readMem(ram, a);
   _6809_sub16(cpu, cpu->u, b, 0);
-  cpu->ts += 6;
+  cpu->ts += (cpu->md & 1) ? 6 : 8;
   }
 
 void _P11_B4(CPU *cpu) {
@@ -637,7 +642,7 @@ void _P11_BC(CPU *cpu) {                         /* CMPS nnnn */
   b = readMem(ram, a++) << 8;
   b |= readMem(ram, a);
   _6809_sub16(cpu, cpu->s, b, 0);
-  cpu->ts += 6;
+  cpu->ts += (cpu->md & 1) ? 6 : 8;
   }
 
 void _P11_BD(CPU *cpu) {

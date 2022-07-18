@@ -447,7 +447,7 @@ void _P0(CPU *cpu) {                             /* NEG < */
   b = readMem(ram, a);
   b = _6809_neg(cpu, b);
   writeMem(ram, a, b);
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 5 : 6;
   }
 
 void _P1(CPU *cpu) {
@@ -464,7 +464,7 @@ void _P3(CPU *cpu) {                             /* COM < */
   b = readMem(ram, a);
   b = _6809_com(cpu, b);
   writeMem(ram, a, b);
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 5 : 6;
   }
 
 void _P4(CPU *cpu) {                             /* LSR < */
@@ -475,7 +475,7 @@ void _P4(CPU *cpu) {                             /* LSR < */
   b = readMem(ram, a);
   b = _6809_lsr(cpu, b);
   writeMem(ram, a, b);
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 5 : 6;
   }
 
 void _P5(CPU *cpu) {
@@ -489,7 +489,7 @@ void _P6(CPU *cpu) {                             /* ROR < */
   b = readMem(ram, a);
   b = _6809_ror(cpu, b);
   writeMem(ram, a, b);
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 5 : 6;
   }
 
 void _P7(CPU *cpu) {                             /* ASR < */
@@ -500,7 +500,7 @@ void _P7(CPU *cpu) {                             /* ASR < */
   b = readMem(ram, a);
   b = _6809_asr(cpu, b);
   writeMem(ram, a, b);
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 5 : 6;
   }
 
 void _P8(CPU *cpu) {                             /* ASL < */
@@ -511,7 +511,7 @@ void _P8(CPU *cpu) {                             /* ASL < */
   b = readMem(ram, a);
   b = _6809_asl(cpu, b);
   writeMem(ram, a, b);
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 5 : 6;
   }
 
 void _P9(CPU *cpu) {                             /* ROL < */
@@ -522,7 +522,7 @@ void _P9(CPU *cpu) {                             /* ROL < */
   b = readMem(ram, a);
   b = _6809_rol(cpu, b);
   writeMem(ram, a, b);
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 5 : 6;
   }
 
 void _PA(CPU *cpu) {                             /* DEC < */
@@ -533,7 +533,7 @@ void _PA(CPU *cpu) {                             /* DEC < */
   b = readMem(ram, a);
   b = _6809_dec(cpu, b);
   writeMem(ram, a, b);
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 5 : 6;
   }
 
 void _PB(CPU *cpu) {
@@ -547,7 +547,7 @@ void _PC(CPU *cpu) {                             /* INC < */
   b = readMem(ram, a);
   b = _6809_inc(cpu, b);
   writeMem(ram, a, b);
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 5 : 6;
   }
     
 void _PD(CPU *cpu) {                             /* TST < */
@@ -557,7 +557,7 @@ void _PD(CPU *cpu) {                             /* TST < */
   a |= readMem(ram, cpu->pc++);
   b = readMem(ram, a);
   _6809_tst(cpu, b);
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 4 : 6;
   }
 
 void _PE(CPU *cpu) {                             /* JMP < */
@@ -565,7 +565,7 @@ void _PE(CPU *cpu) {                             /* JMP < */
   a = cpu->dp << 8;
   a |= readMem(ram, cpu->pc++);
   cpu->pc = a;
-  cpu->ts += 1;
+  cpu->ts += (cpu->md & 1) ? 2 : 3;
   }
 
 void _PF(CPU *cpu) {                             /* CLR < */
@@ -577,7 +577,7 @@ void _PF(CPU *cpu) {                             /* CLR < */
   cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
   cpu->cc &= (~FLAG_C);
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 5 : 6;
   }
 
 void _P10(CPU *cpu) {
@@ -592,11 +592,13 @@ void _P11(CPU *cpu) {
   cpu->Inst11[c](cpu);
   }
 
-void _P12(CPU *cpu) {
+void _P12(CPU *cpu) {                            /* NOP */
+  cpu->ts += (cpu->md & 1) ? 1 : 2;
   }
 
 void _P13(CPU *cpu) {
   cpu->halt = 0xff;
+  cpu->ts += (cpu->md & 1) ? 3 : 4;
   }
 
 void _P14(CPU *cpu) {
@@ -614,7 +616,7 @@ void _P17(CPU *cpu) {
 void _P18(CPU *cpu) {
   }
 
-void _P19(CPU *cpu) {
+void _P19(CPU *cpu) {                            /* DAA */
   word c;
   word a;
   a = 0;
@@ -632,12 +634,14 @@ void _P19(CPU *cpu) {
     else cpu->cc &= (~FLAG_N);
   if (c >= 0x100) cpu->cc |= FLAG_C;
     else cpu->cc &= (~FLAG_C);
+  cpu->ts += (cpu->md & 1) ? 1 : 2;
   }
 
 void _P1A(CPU *cpu) {                            /* ORCC */
   byte b;
   b = readMem(ram, cpu->pc++);
   cpu->cc |= b;
+  cpu->ts += (cpu->md & 1) ? 3 : 3;
   }
 
 void _P1B(CPU *cpu) {
@@ -647,11 +651,13 @@ void _P1C(CPU *cpu) {                            /* ANDCC */
   byte b;
   b = readMem(ram, cpu->pc++);
   cpu->cc &= b;
+  cpu->ts += (cpu->md & 1) ? 3 : 3;
   }
 
 void _P1D(CPU *cpu) {                            /* SEX */
   if (cpu->b & 0x80) cpu->a = 0xff;
     else cpu->a = 0x00;
+  cpu->ts += (cpu->md & 1) ? 1 : 2;
   }
 
 void _P1E(CPU *cpu) {                            /* EXG */
@@ -716,7 +722,7 @@ void _P1E(CPU *cpu) {                            /* EXG */
     cpu->a = (d >> 8);
     cpu->b = d & 0xff;
     }
-  cpu->ts += 6;
+  cpu->ts += (cpu->md & 1) ? 5 : 8;
   }
 
 void _P1F(CPU *cpu) {                            /* TFR r,r */
@@ -773,7 +779,7 @@ void _P1F(CPU *cpu) {                            /* TFR r,r */
     cpu->a = (d >> 8);
     cpu->b = d & 0xff;
     }
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 4 : 6;
   }
 
 void _P20(CPU *cpu) {                            /* BRA nn */
@@ -812,7 +818,7 @@ void _P24(CPU *cpu) {                            /* BCC nn */
   d = readMem(ram, cpu->pc++);
   if (d & 0x80) d |= 0xff00;
   if ((cpu->cc & FLAG_C) == 0) cpu->pc += d;
-  cpu->ts++;
+  cpu->ts += (cpu->md & 1) ? 3 : 3;
   }
 
 void _P25(CPU *cpu) {                            /* BCS nn */
@@ -820,7 +826,7 @@ void _P25(CPU *cpu) {                            /* BCS nn */
   d = readMem(ram, cpu->pc++);
   if (d & 0x80) d |= 0xff00;
   if ((cpu->cc & FLAG_C) != 0) cpu->pc += d;
-  cpu->ts++;
+  cpu->ts += (cpu->md & 1) ? 3 : 3;
   }
 
 void _P26(CPU *cpu) {                            /* BNE nn */
@@ -828,7 +834,7 @@ void _P26(CPU *cpu) {                            /* BNE nn */
   d = readMem(ram, cpu->pc++);
   if (d & 0x80) d |= 0xff00;
   if ((cpu->cc & FLAG_Z) == 0) cpu->pc += d;
-  cpu->ts++;
+  cpu->ts += (cpu->md & 1) ? 3 : 3;
   }
 
 void _P27(CPU *cpu) {                            /* BEQ nn */
@@ -836,7 +842,7 @@ void _P27(CPU *cpu) {                            /* BEQ nn */
   d = readMem(ram, cpu->pc++);
   if (d & 0x80) d |= 0xff00;
   if ((cpu->cc & FLAG_Z) != 0) cpu->pc += d;
-  cpu->ts++;
+  cpu->ts += (cpu->md & 1) ? 3 : 3;
   }
 
 void _P28(CPU *cpu) {                            /* BVC nn */
@@ -844,7 +850,7 @@ void _P28(CPU *cpu) {                            /* BVC nn */
   d = readMem(ram, cpu->pc++);
   if (d & 0x80) d |= 0xff00;
   if ((cpu->cc & FLAG_V) == 0) cpu->pc += d;
-  cpu->ts++;
+  cpu->ts += (cpu->md & 1) ? 3 : 3;
   }
 
 void _P29(CPU *cpu) {                            /* BVS nn */
@@ -852,7 +858,7 @@ void _P29(CPU *cpu) {                            /* BVS nn */
   d = readMem(ram, cpu->pc++);
   if (d & 0x80) d |= 0xff00;
   if ((cpu->cc & FLAG_V) != 0) cpu->pc += d;
-  cpu->ts++;
+  cpu->ts += (cpu->md & 1) ? 3 : 3;
   }
 
 void _P2A(CPU *cpu) {                            /* BPL nn */
@@ -860,7 +866,7 @@ void _P2A(CPU *cpu) {                            /* BPL nn */
   d = readMem(ram, cpu->pc++);
   if (d & 0x80) d |= 0xff00;
   if ((cpu->cc & FLAG_N) == 0) cpu->pc += d;
-  cpu->ts++;
+  cpu->ts += (cpu->md & 1) ? 3 : 3;
   }
 
 void _P2B(CPU *cpu) {                            /* BMI nn */
@@ -868,7 +874,7 @@ void _P2B(CPU *cpu) {                            /* BMI nn */
   d = readMem(ram, cpu->pc++);
   if (d & 0x80) d |= 0xff00;
   if ((cpu->cc & FLAG_N) != 0) cpu->pc += d;
-  cpu->ts++;
+  cpu->ts += (cpu->md & 1) ? 3 : 3;
   }
 
 void _P2C(CPU *cpu) {                            /* BGE nn */
@@ -876,7 +882,7 @@ void _P2C(CPU *cpu) {                            /* BGE nn */
   d = readMem(ram, cpu->pc++);
   if (d & 0x80) d |= 0xff00;
   if (((cpu->cc >> 3) & 0x01) == ((cpu->cc >> 1) & 0x01)) cpu->pc += d;
-  cpu->ts++;
+  cpu->ts += (cpu->md & 1) ? 3 : 3;
   }
 
 void _P2D(CPU *cpu) {                            /* BLT nn */
@@ -884,7 +890,7 @@ void _P2D(CPU *cpu) {                            /* BLT nn */
   d = readMem(ram, cpu->pc++);
   if (d & 0x80) d |= 0xff00;
   if (((cpu->cc >> 3) & 0x01) != ((cpu->cc >> 1) & 0x01)) cpu->pc += d;
-  cpu->ts++;
+  cpu->ts += (cpu->md & 1) ? 3 : 3;
   }
 
 void _P2E(CPU *cpu) {                            /* BGT nn */
@@ -893,7 +899,7 @@ void _P2E(CPU *cpu) {                            /* BGT nn */
   if (d & 0x80) d |= 0xff00;
   if (((cpu->cc & FLAG_Z) == 0) &&
       (((cpu->cc >> 3) & 0x01) == ((cpu->cc >> 1) & 0x01))) cpu->pc += d;
-  cpu->ts++;
+  cpu->ts += (cpu->md & 1) ? 3 : 3;
   }
 
 void _P2F(CPU *cpu) {                            /* BLE nn */
@@ -902,33 +908,33 @@ void _P2F(CPU *cpu) {                            /* BLE nn */
   if (d & 0x80) d |= 0xff00;
   if (((cpu->cc & FLAG_Z) != 0) ||
       (((cpu->cc >> 3) & 0x01) != ((cpu->cc >> 1) & 0x01))) cpu->pc += d;
-  cpu->ts++;
+  cpu->ts += (cpu->md & 1) ? 3 : 3;
   }
 
 void _P30(CPU *cpu) {                            /* LEAX */
   cpu->x = _6809_ea(cpu);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 4 : 4;
   }
 
 void _P31(CPU *cpu) {                            /* LEAY */
   cpu->y = _6809_ea(cpu);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 4 : 4;
   }
 
 void _P32(CPU *cpu) {                            /* LEAS */
   cpu->s = _6809_ea(cpu);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 4 : 4;
   }
 
 void _P33(CPU *cpu) {                            /* LEAU */
   cpu->u = _6809_ea(cpu);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 4 : 4;
   }
 
 void _P34(CPU *cpu) {                            /* PSHS */
   byte b;
   b= readMem(ram, cpu->pc++);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 4 : 5;
   if (b & 0x80) {
     cpu->ts += 2;
     _6809_push(ram, cpu, cpu->pc & 0xff);
@@ -970,7 +976,7 @@ void _P34(CPU *cpu) {                            /* PSHS */
 void _P35(CPU *cpu) {                            /* PULS */
   byte b;
   b= readMem(ram, cpu->pc++);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 4 : 5;
   if (b & 0x01) {
     cpu->ts += 1;
     cpu->cc = _6809_pop(ram, cpu);
@@ -1012,7 +1018,7 @@ void _P35(CPU *cpu) {                            /* PULS */
 void _P36(CPU *cpu) {                            /* PSHU */
   byte b;
   b= readMem(ram, cpu->pc++);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 4 : 5;
   if (b & 0x80) {
     cpu->ts += 2;
     _6809_pushu(ram, cpu, cpu->pc & 0xff);
@@ -1054,7 +1060,7 @@ void _P36(CPU *cpu) {                            /* PSHU */
 void _P37(CPU *cpu) {                            /* PULU */
   byte b;
   b= readMem(ram, cpu->pc++);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 4 : 5;
   if (b & 0x01) {
     cpu->ts += 1;
     cpu->cc = _6809_popu(ram, cpu);
@@ -1099,21 +1105,26 @@ void _P38(CPU *cpu) {
 void _P39(CPU *cpu) {                            /* RTS */
   cpu->pc = _6809_pop(ram, cpu) << 8;
   cpu->pc |= _6809_pop(ram, cpu);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 4 : 5;
   }
 
 void _P3A(CPU *cpu) {                            /* ABX */
   cpu->x += cpu->b;
-  cpu->ts++;
+  cpu->ts += (cpu->md & 1) ? 1 : 3;
   }
 
 void _P3B(CPU *cpu) {                            /* RTI */
-  cpu->ts += 6;
+  cpu->ts += (cpu->md & 1) ? 6 : 6;
   cpu->cc = _6809_pop(ram, cpu);
   if (cpu->cc & 0x80) {
     cpu->ts += 9;
+    if (use6309 && (cpu->md & 1)) cpu->ts += 2;
     cpu->a = _6809_pop(ram, cpu);
     cpu->b = _6809_pop(ram, cpu);
+    if (use6309 && (cpu->md & 1)) {
+      cpu->e = _6809_pop(ram, cpu);
+      cpu->f = _6809_pop(ram, cpu);
+      }
     cpu->dp = _6809_pop(ram, cpu);
     cpu->x = _6809_pop(ram, cpu) << 8;
     cpu->x |= _6809_pop(ram, cpu);
@@ -1130,7 +1141,25 @@ void _P3C(CPU *cpu) {                            /* CWAI #*/
   byte b;
   b = readMem(ram, cpu->pc++);
   cpu->cc &= b;
+  cpu->cc |= 0x80;
+  _6809_push(ram, cpu, cpu->pc & 0xff);
+  _6809_push(ram, cpu, cpu->pc >> 8);
+  _6809_push(ram, cpu, cpu->u & 0xff);
+  _6809_push(ram, cpu, cpu->u >> 8);
+  _6809_push(ram, cpu, cpu->y & 0xff);
+  _6809_push(ram, cpu, cpu->y >> 8);
+  _6809_push(ram, cpu, cpu->x & 0xff);
+  _6809_push(ram, cpu, cpu->x >> 8);
+  _6809_push(ram, cpu, cpu->dp);
+  if (use6309 && (cpu->md & 1)) {
+    _6809_push(ram, cpu, cpu->f);
+    _6809_push(ram, cpu, cpu->e);
+    }
+  _6809_push(ram, cpu, cpu->b);
+  _6809_push(ram, cpu, cpu->a);
+  _6809_push(ram, cpu, cpu->cc);
   cpu->halt = 0xff;
+  cpu->ts += (cpu->md & 1) ? 20 : 22;
   }
 
 void _P3D(CPU *cpu) {                            /* MUL */
@@ -1140,8 +1169,8 @@ void _P3D(CPU *cpu) {                            /* MUL */
   cpu->b = d & 0xff;
   if (d == 0)  cpu->cc |= FLAG_Z;
     else cpu->cc &= (~FLAG_Z);
-  cpu->ts += 9;
   if (cpu->b && 0x80) cpu->cc |= FLAG_C;
+  cpu->ts += (cpu->md & 1) ? 10 : 11;
   }
 
 void _P3E(CPU *cpu) {
@@ -1158,17 +1187,23 @@ void _P3F(CPU *cpu) {
   _6809_push(ram, cpu, cpu->x & 0xff);
   _6809_push(ram, cpu, cpu->x >> 8);
   _6809_push(ram, cpu, cpu->dp);
+  if (use6309 && (cpu->md & 1)) {
+    cpu->ts += 2;
+    _6809_push(ram, cpu, cpu->f);
+    _6809_push(ram, cpu, cpu->e);
+    }
   _6809_push(ram, cpu, cpu->b);
   _6809_push(ram, cpu, cpu->a);
   _6809_push(ram, cpu, cpu->cc);
   cpu->cc |= 0x50;
-  cpu->ts += 17;
   cpu->pc = readMem(ram, 0xfffa) << 8;
   cpu->pc |= readMem(ram, 0xfffb);
+  cpu->ts += (cpu->md & 1) ? 19 : 19;
   }
 
 void _P40(CPU *cpu) {                            /* NEGA */
   cpu->a = _6809_neg(cpu, cpu->a);
+  cpu->ts += (cpu->md & 1) ? 1 : 2;
   }
 
 void _P41(CPU *cpu) {
@@ -1179,10 +1214,12 @@ void _P42(CPU *cpu) {
 
 void _P43(CPU *cpu) {                            /* COMA */
   cpu->a = _6809_com(cpu, cpu->a);
+  cpu->ts += (cpu->md & 1) ? 1 : 2;
   }
 
 void _P44(CPU *cpu) {                            /* LSRA */
   cpu->a = _6809_lsr(cpu, cpu->a);
+  cpu->ts += (cpu->md & 1) ? 1 : 2;
   }
 
 void _P45(CPU *cpu) {
@@ -1190,22 +1227,27 @@ void _P45(CPU *cpu) {
 
 void _P46(CPU *cpu) {                            /* RORA */
   cpu->a = _6809_ror(cpu, cpu->a);
+  cpu->ts += (cpu->md & 1) ? 1 : 2;
   }
 
 void _P47(CPU *cpu) {                            /* ASRA */
   cpu->a = _6809_asr(cpu, cpu->a);
+  cpu->ts += (cpu->md & 1) ? 1 : 2;
   }
 
 void _P48(CPU *cpu) {                            /* ASLA */
   cpu->a = _6809_asl(cpu, cpu->a);
+  cpu->ts += (cpu->md & 1) ? 1 : 2;
   }
 
 void _P49(CPU *cpu) {                            /* ROLA */
   cpu->a = _6809_rol(cpu, cpu->a);
+  cpu->ts += (cpu->md & 1) ? 1 : 2;
   }
 
 void _P4A(CPU *cpu) {                            /* DECA */
   cpu->a = _6809_dec(cpu, cpu->a);
+  cpu->ts += (cpu->md & 1) ? 1 : 2;
   }
 
 void _P4B(CPU *cpu) {
@@ -1213,10 +1255,12 @@ void _P4B(CPU *cpu) {
 
 void _P4C(CPU *cpu) {                            /* INCA */
   cpu->a = _6809_inc(cpu, cpu->a);
+  cpu->ts += (cpu->md & 1) ? 2 : 1;
   }
 
 void _P4D(CPU *cpu) {                            /* TSTA */
   _6809_tst(cpu, cpu->a);
+  cpu->ts += (cpu->md & 1) ? 1 : 2;
   }
 
 void _P4E(CPU *cpu) {
@@ -1228,10 +1272,12 @@ void _P4F(CPU *cpu) {                            /* CLRA */
   cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
   cpu->cc &= (~FLAG_C);
+  cpu->ts += (cpu->md & 1) ? 1 : 2;
   }
 
 void _P50(CPU *cpu) {                            /* NEGB */
   cpu->b = _6809_neg(cpu, cpu->b);
+  cpu->ts += (cpu->md & 1) ? 1 : 2;
   }
 
 void _P51(CPU *cpu) {
@@ -1242,10 +1288,13 @@ void _P52(CPU *cpu) {
 
 void _P53(CPU *cpu) {                            /* COMB */
   cpu->b = _6809_com(cpu, cpu->b);
+  cpu->ts += (cpu->md & 1) ? 1 : 2;
+  cpu->ts += (cpu->md & 1) ? 1 : 2;
   }
 
 void _P54(CPU *cpu) {                            /* LSRB */
   cpu->b = _6809_lsr(cpu, cpu->b);
+  cpu->ts += (cpu->md & 1) ? 1 : 2;
   }
 
 void _P55(CPU *cpu) {
@@ -1253,22 +1302,27 @@ void _P55(CPU *cpu) {
 
 void _P56(CPU *cpu) {                            /* RORB */
   cpu->b = _6809_ror(cpu, cpu->b);
+  cpu->ts += (cpu->md & 1) ? 1 : 2;
   }
 
 void _P57(CPU *cpu) {                            /* ASRB */
   cpu->b = _6809_asr(cpu, cpu->b);
+  cpu->ts += (cpu->md & 1) ? 1 : 2;
   }
 
 void _P58(CPU *cpu) {                            /* ASLB */
   cpu->b = _6809_asl(cpu, cpu->b);
+  cpu->ts += (cpu->md & 1) ? 1 : 2;
   }
 
 void _P59(CPU *cpu) {                            /* ROLB */
   cpu->b = _6809_rol(cpu, cpu->b);
+  cpu->ts += (cpu->md & 1) ? 1 : 2;
   }
 
 void _P5A(CPU *cpu) {                            /* DECB */
   cpu->b = _6809_dec(cpu, cpu->b);
+  cpu->ts += (cpu->md & 1) ? 1 : 2;
   }
 
 void _P5B(CPU *cpu) {
@@ -1276,10 +1330,12 @@ void _P5B(CPU *cpu) {
 
 void _P5C(CPU *cpu) {                            /* INCB */
   cpu->b = _6809_inc(cpu, cpu->b);
+  cpu->ts += (cpu->md & 1) ? 2 : 1;
   }
 
 void _P5D(CPU *cpu) {                            /* TSTB */
   _6809_tst(cpu, cpu->b);
+  cpu->ts += (cpu->md & 1) ? 1 : 2;
   }
 
 void _P5E(CPU *cpu) {
@@ -1291,6 +1347,7 @@ void _P5F(CPU *cpu) {                            /* CLRB */
   cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
   cpu->cc &= (~FLAG_C);
+  cpu->ts += (cpu->md & 1) ? 1 : 2;
   }
 
 void _P60(CPU *cpu) {                            /* NEG , */
@@ -1300,7 +1357,7 @@ void _P60(CPU *cpu) {                            /* NEG , */
   b = readMem(ram, a);
   b = _6809_neg(cpu, b);
   writeMem(ram, a, b);
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 6 : 6;
   }
 
 void _P61(CPU *cpu) {
@@ -1316,7 +1373,7 @@ void _P63(CPU *cpu) {                            /* COM , */
   b = readMem(ram, a);
   b = _6809_com(cpu, b);
   writeMem(ram, a, b);
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 6 : 6;
   }
 
 void _P64(CPU *cpu) {                            /* LSR , */
@@ -1326,7 +1383,7 @@ void _P64(CPU *cpu) {                            /* LSR , */
   b = readMem(ram, a);
   b = _6809_lsr(cpu, b);
   writeMem(ram, a, b);
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 6 : 6;
   }
 
 void _P65(CPU *cpu) {
@@ -1339,7 +1396,7 @@ void _P66(CPU *cpu) {                            /* ROR , */
   b = readMem(ram, a);
   b = _6809_ror(cpu, b);
   writeMem(ram, a, b);
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 6 : 6;
   }
 
 void _P67(CPU *cpu) {                            /* ASR , */
@@ -1349,7 +1406,7 @@ void _P67(CPU *cpu) {                            /* ASR , */
   b = readMem(ram, a);
   b = _6809_asr(cpu, b);
   writeMem(ram, a, b);
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 6 : 6;
   }
 
 void _P68(CPU *cpu) {                            /* ASL , */
@@ -1359,7 +1416,7 @@ void _P68(CPU *cpu) {                            /* ASL , */
   b = readMem(ram, a);
   b = _6809_asl(cpu, b);
   writeMem(ram, a, b);
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 6 : 6;
   }
 
 void _P69(CPU *cpu) {                            /* ROL , */
@@ -1369,7 +1426,7 @@ void _P69(CPU *cpu) {                            /* ROL , */
   b = readMem(ram, a);
   b = _6809_rol(cpu, b);
   writeMem(ram, a, b);
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 6 : 6;
   }
 
 void _P6A(CPU *cpu) {                            /* DEC , */
@@ -1379,7 +1436,7 @@ void _P6A(CPU *cpu) {                            /* DEC , */
   b = readMem(ram, a);
   b = _6809_dec(cpu, b);
   writeMem(ram, a, b);
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 6 : 6;
   }
 
 void _P6B(CPU *cpu) {
@@ -1392,7 +1449,7 @@ void _P6C(CPU *cpu) {                            /* INC , */
   b = readMem(ram, a);
   b = _6809_inc(cpu, b);
   writeMem(ram, a, b);
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 6 : 6;
   }
 
 void _P6D(CPU *cpu) {                            /* TST , */
@@ -1401,12 +1458,12 @@ void _P6D(CPU *cpu) {                            /* TST , */
   a = _6809_ea(cpu);
   b = readMem(ram, a);
   _6809_tst(cpu, b);
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 5 : 6;
   }
 
 void _P6E(CPU *cpu) {                            /* JMP , */
   cpu->pc = _6809_ea(cpu);
-  cpu->ts += 1;
+  cpu->ts += (cpu->md & 1) ? 3 : 3;
   }
 
 void _P6F(CPU *cpu) {                            /* CLR , */
@@ -1418,6 +1475,7 @@ void _P6F(CPU *cpu) {                            /* CLR , */
   cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
   cpu->cc &= (~FLAG_C);
+  cpu->ts += (cpu->md & 1) ? 6 : 6;
   }
 
 void _P70(CPU *cpu) {                            /* NEG nnnn */
@@ -1428,7 +1486,7 @@ void _P70(CPU *cpu) {                            /* NEG nnnn */
   b = readMem(ram, a);
   b = _6809_neg(cpu, b);
   writeMem(ram, a, b);
-  cpu->ts += 5;
+  cpu->ts += (cpu->md & 1) ? 6 : 7;
   }
 
 void _P71(CPU *cpu) {
@@ -1445,7 +1503,7 @@ void _P73(CPU *cpu) {                            /* COM nnnn */
   b = readMem(ram, a);
   b = _6809_com(cpu, b);
   writeMem(ram, a, b);
-  cpu->ts += 5;
+  cpu->ts += (cpu->md & 1) ? 6 : 7;
   }
 
 void _P74(CPU *cpu) {                            /* LSR nnnn */
@@ -1456,7 +1514,7 @@ void _P74(CPU *cpu) {                            /* LSR nnnn */
   b = readMem(ram, a);
   b = _6809_lsr(cpu, b);
   writeMem(ram, a, b);
-  cpu->ts += 5;
+  cpu->ts += (cpu->md & 1) ? 6 : 7;
   }
 
 void _P75(CPU *cpu) {
@@ -1470,7 +1528,7 @@ void _P76(CPU *cpu) {                            /* ROR nnnn */
   b = readMem(ram, a);
   b = _6809_ror(cpu, b);
   writeMem(ram, a, b);
-  cpu->ts += 5;
+  cpu->ts += (cpu->md & 1) ? 6 : 7;
   }
 
 void _P77(CPU *cpu) {                            /* ASR nnnn */
@@ -1481,7 +1539,7 @@ void _P77(CPU *cpu) {                            /* ASR nnnn */
   b = readMem(ram, a);
   b = _6809_asr(cpu, b);
   writeMem(ram, a, b);
-  cpu->ts += 5;
+  cpu->ts += (cpu->md & 1) ? 6 : 7;
   }
 
 void _P78(CPU *cpu) {                            /* ASL nnnn */
@@ -1492,7 +1550,7 @@ void _P78(CPU *cpu) {                            /* ASL nnnn */
   b = readMem(ram, a);
   b = _6809_asl(cpu, b);
   writeMem(ram, a, b);
-  cpu->ts += 5;
+  cpu->ts += (cpu->md & 1) ? 6 : 7;
   }
 
 void _P79(CPU *cpu) {                            /* ROL nnnn */
@@ -1503,7 +1561,7 @@ void _P79(CPU *cpu) {                            /* ROL nnnn */
   b = readMem(ram, a);
   b = _6809_rol(cpu, b);
   writeMem(ram, a, b);
-  cpu->ts += 5;
+  cpu->ts += (cpu->md & 1) ? 6 : 7;
   }
 
 void _P7A(CPU *cpu) {                            /* DEC nnnn */
@@ -1514,7 +1572,7 @@ void _P7A(CPU *cpu) {                            /* DEC nnnn */
   b = readMem(ram, a);
   b = _6809_dec(cpu, b);
   writeMem(ram, a, b);
-  cpu->ts += 5;
+  cpu->ts += (cpu->md & 1) ? 6 : 7;
   }
 
 void _P7B(CPU *cpu) {
@@ -1528,7 +1586,7 @@ void _P7C(CPU *cpu) {                            /* INC nnnn */
   b = readMem(ram, a);
   b = _6809_inc(cpu, b);
   writeMem(ram, a, b);
-  cpu->ts += 5;
+  cpu->ts += (cpu->md & 1) ? 6 : 7;
   }
 
 void _P7D(CPU *cpu) {                            /* TST nnnn */
@@ -1538,7 +1596,7 @@ void _P7D(CPU *cpu) {                            /* TST nnnn */
   a |= readMem(ram, cpu->pc++);
   b = readMem(ram, a);
   _6809_tst(cpu, b);
-  cpu->ts += 5;
+  cpu->ts += (cpu->md & 1) ? 5 : 7;
   }
 
 void _P7E(CPU *cpu) {                            /* JMP nnnn */
@@ -1546,7 +1604,7 @@ void _P7E(CPU *cpu) {                            /* JMP nnnn */
   a = readMem(ram, cpu->pc++) << 8;
   a |= readMem(ram, cpu->pc++);
   cpu->pc = a;
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 3 : 4;
   }
 
 void _P7F(CPU *cpu) {                            /* CLR nnnn */
@@ -1558,25 +1616,28 @@ void _P7F(CPU *cpu) {                            /* CLR nnnn */
   cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
   cpu->cc &= (~FLAG_C);
-  cpu->ts += 5;
+  cpu->ts += (cpu->md & 1) ? 6 : 7;
   }
 
 void _P80(CPU *cpu) {                            /* SUBA # */
   byte b;
   b = readMem(ram, cpu->pc++);
   cpu->a = _6809_sub(cpu, cpu->a, b, 0);
+  cpu->ts += (cpu->md & 1) ? 2 : 2;
   }
 
 void _P81(CPU *cpu) {                            /* CMPA # */
   byte b;
   b = readMem(ram, cpu->pc++);
   _6809_sub(cpu, cpu->a, b, 0);
+  cpu->ts += (cpu->md & 1) ? 2 : 2;
   }
 
 void _P82(CPU *cpu) {                            /* SBCA # */
   byte b;
   b = readMem(ram, cpu->pc++);
   cpu->a = _6809_sub(cpu, cpu->a, b, cpu->cc & 0x01);
+  cpu->ts += (cpu->md & 1) ? 2 : 2;
   }
 
 void _P83(CPU *cpu) {                            /* SUBD # */
@@ -1588,19 +1649,21 @@ void _P83(CPU *cpu) {                            /* SUBD # */
   d = _6809_sub16(cpu, cpu->b, b, 0);
   cpu->a = (d >> 8) & 0xff;
   cpu->b = d & 0xff;
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 3 : 4;
   }
 
 void _P84(CPU *cpu) {                            /* ANDA # */
   byte b;
   b = readMem(ram, cpu->pc++);
   cpu->a = _6809_and(cpu, cpu->a, b);
+  cpu->ts += (cpu->md & 1) ? 2 : 2;
   }
 
 void _P85(CPU *cpu) {                            /* BITA # */
   byte b;
   b = readMem(ram, cpu->pc++);
   _6809_and(cpu, cpu->a, b);
+  cpu->ts += (cpu->md & 1) ? 2 : 2;
   }
 
 void _P86(CPU *cpu) {                            /* LDA # */
@@ -1608,6 +1671,7 @@ void _P86(CPU *cpu) {                            /* LDA # */
   if (cpu->a == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->a & 0x80) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
+  cpu->ts += (cpu->md & 1) ? 2 : 2;
   }
 
 void _P87(CPU *cpu) {
@@ -1617,24 +1681,28 @@ void _P88(CPU *cpu) {                           /* EOR # */
   byte b;
   b = readMem(ram, cpu->pc++);
   cpu->a = _6809_eor(cpu, cpu->a, b);
+  cpu->ts += (cpu->md & 1) ? 2 : 2;
   }
 
 void _P89(CPU *cpu) {                            /* ADCA #n */
   byte b;
   b = readMem(ram, cpu->pc++);
   cpu->a = _6809_add(cpu, cpu->a, b, cpu->cc & 0x01);
+  cpu->ts += (cpu->md & 1) ? 2 : 2;
   }
 
 void _P8A(CPU *cpu) {                            /* ORA # */
   byte b;
   b = readMem(ram, cpu->pc++);
   cpu->a = _6809_or(cpu, cpu->a, b);
+  cpu->ts += (cpu->md & 1) ? 2 : 2;
   }
 
 void _P8B(CPU *cpu) {                            /* ADDA # */
   byte b;
   b = readMem(ram, cpu->pc++);
   cpu->a = _6809_add(cpu, cpu->a, b, 0);
+  cpu->ts += (cpu->md & 1) ? 2 : 2;
   }
 
 void _P8C(CPU *cpu) {                            /* CMPX # */
@@ -1642,7 +1710,7 @@ void _P8C(CPU *cpu) {                            /* CMPX # */
   b = (readMem(ram, cpu->pc) << 8) + readMem(ram, cpu->pc+1);
   cpu->pc += 2;
   _6809_sub16(cpu, cpu->x, b, 0);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 3 : 4;
   }
 
 void _P8D(CPU *cpu) {                            /* BSR nn */
@@ -1652,7 +1720,7 @@ void _P8D(CPU *cpu) {                            /* BSR nn */
   _6809_push(ram, cpu, cpu->pc & 0xff);
   _6809_push(ram, cpu, (cpu->pc >> 8));
   cpu->pc += d;
-  cpu->ts += 5;
+  cpu->ts += (cpu->md & 1) ? 6 : 7;
   }
 
 void _P8E(CPU *cpu) {                            /* LDX # */
@@ -1661,7 +1729,7 @@ void _P8E(CPU *cpu) {                            /* LDX # */
   if (cpu->x == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->x & 0x8000) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts++;
+  cpu->ts += (cpu->md & 1) ? 3 : 3;
   }
 
 void _P8F(CPU *cpu) {
@@ -1674,7 +1742,7 @@ void _P90(CPU *cpu) {                            /* SUBA < */
   a |= readMem(ram, cpu->pc++);
   b = readMem(ram, a);
   cpu->a = _6809_sub(cpu, cpu->a, b, 0);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 3 : 4;
   }
 
 void _P91(CPU *cpu) {                            /* CMPA < */
@@ -1684,7 +1752,7 @@ void _P91(CPU *cpu) {                            /* CMPA < */
   a |= readMem(ram, cpu->pc++);
   b = readMem(ram, a);
   _6809_sub(cpu, cpu->a, b, 0);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 3 : 4;
   }
 
 void _P92(CPU *cpu) {                            /* SBCA < */
@@ -1694,7 +1762,7 @@ void _P92(CPU *cpu) {                            /* SBCA < */
   a |= readMem(ram, cpu->pc++);
   b = readMem(ram, a);
   cpu->a = _6809_sub(cpu, cpu->a, b, cpu->cc & 0x01);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 3 : 4;
   }
 
 void _P93(CPU *cpu) {                            /* SUBD < */
@@ -1708,7 +1776,7 @@ void _P93(CPU *cpu) {                            /* SUBD < */
   d = _6809_sub16(cpu, d, b, 0);
   cpu->a = (d >> 8) & 0xff;
   cpu->b = d & 0xff;
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 4 : 6;
   }
 
 void _P94(CPU *cpu) {                            /* ANDA < */
@@ -1718,7 +1786,7 @@ void _P94(CPU *cpu) {                            /* ANDA < */
   a |= readMem(ram, cpu->pc++);
   b = readMem(ram, a);
   cpu->a = _6809_and(cpu, cpu->a, b);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 3 : 4;
   }
 
 void _P95(CPU *cpu) {                            /* BITA < */
@@ -1728,7 +1796,7 @@ void _P95(CPU *cpu) {                            /* BITA < */
   a |= readMem(ram, cpu->pc++);
   b = readMem(ram, a);
   _6809_and(cpu, cpu->a, b);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 3 : 4;
   }
 
 void _P96(CPU *cpu) {                            /* LDA < */
@@ -1739,7 +1807,7 @@ void _P96(CPU *cpu) {                            /* LDA < */
   if (cpu->a == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->a & 0x80) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 3 : 4;
   }
 
 void _P97(CPU *cpu) {                            /* STA < */
@@ -1750,7 +1818,7 @@ void _P97(CPU *cpu) {                            /* STA < */
   if (cpu->a == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->a & 0x80) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 3 : 4;
   }
 
 void _P98(CPU *cpu) {                           /* EORA < */
@@ -1760,7 +1828,7 @@ void _P98(CPU *cpu) {                           /* EORA < */
   a |= readMem(ram, cpu->pc++);
   b = readMem(ram, a);
   cpu->a = _6809_eor(cpu, cpu->a, b);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 3 : 4;
   }
 
 void _P99(CPU *cpu) {                            /* ADCA < */
@@ -1770,7 +1838,7 @@ void _P99(CPU *cpu) {                            /* ADCA < */
   a |= readMem(ram, cpu->pc++);
   b = readMem(ram, a);
   cpu->a = _6809_add(cpu, cpu->a, b, cpu->cc & 0x01);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 3 : 4;
   }
 
 void _P9A(CPU *cpu) {                            /* ORA < */
@@ -1780,7 +1848,7 @@ void _P9A(CPU *cpu) {                            /* ORA < */
   a |= readMem(ram, cpu->pc++);
   b = readMem(ram, a);
   cpu->a = _6809_or(cpu, cpu->a, b);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 3 : 4;
   }
 
 void _P9B(CPU *cpu) {                            /* ADDA < */
@@ -1790,7 +1858,7 @@ void _P9B(CPU *cpu) {                            /* ADDA < */
   a |= readMem(ram, cpu->pc++);
   b = readMem(ram, a);
   cpu->a = _6809_add(cpu, cpu->a, b, 0);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 3 : 4;
   }
 
 void _P9C(CPU *cpu) {                            /* CMPX < */
@@ -1801,7 +1869,7 @@ void _P9C(CPU *cpu) {                            /* CMPX < */
   b = readMem(ram, a++) << 8;
   b |= readMem(ram, a);
   _6809_sub16(cpu, cpu->x, b, 0);
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 4 : 6;
   }
 
 void _P9D(CPU *cpu) {                            /* JSR < */
@@ -1811,7 +1879,7 @@ void _P9D(CPU *cpu) {                            /* JSR < */
   _6809_push(ram, cpu, cpu->pc & 0xff);
   _6809_push(ram, cpu, (cpu->pc >> 8));
   cpu->pc = a;
-  cpu->ts += 5;
+  cpu->ts += (cpu->md & 1) ? 6 : 7;
   }
 
 void _P9E(CPU *cpu) {                            /* LDX < */
@@ -1823,7 +1891,7 @@ void _P9E(CPU *cpu) {                            /* LDX < */
   if (cpu->x == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->x & 0x8000) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 4 : 5;
   }
 
 void _P9F(CPU *cpu) {                            /* STX < */
@@ -1835,7 +1903,7 @@ void _P9F(CPU *cpu) {                            /* STX < */
   if (cpu->x == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->x & 0x8000) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 4 : 5;
   }
 
 void _PA0(CPU *cpu) {                            /* SUBA , */
@@ -1844,7 +1912,7 @@ void _PA0(CPU *cpu) {                            /* SUBA , */
   a = _6809_ea(cpu);
   b = readMem(ram, a);
   cpu->a = _6809_sub(cpu, cpu->a, b, 0);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 4 : 4;
   }
 
 void _PA1(CPU *cpu) {                            /* CMPA , */
@@ -1853,7 +1921,7 @@ void _PA1(CPU *cpu) {                            /* CMPA , */
   a = _6809_ea(cpu);
   b = readMem(ram, a);
   _6809_sub(cpu, cpu->a, b, cpu->cc & 0x01);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 4 : 4;
   }
 
 void _PA2(CPU *cpu) {                            /* SBCA , */
@@ -1862,7 +1930,7 @@ void _PA2(CPU *cpu) {                            /* SBCA , */
   a = _6809_ea(cpu);
   b = readMem(ram, a);
   cpu->a = _6809_sub(cpu, cpu->a, b, cpu->cc & 0x01);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 4 : 4;
   }
 
 void _PA3(CPU *cpu) {                            /* SUBD , */
@@ -1875,7 +1943,7 @@ void _PA3(CPU *cpu) {                            /* SUBD , */
   d = _6809_sub16(cpu, d, b, 0);
   cpu->a = (d >> 8) & 0xff;
   cpu->b = d & 0xff;
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 5 : 6;
   }
 
 void _PA4(CPU *cpu) {                            /* ANDA , */
@@ -1884,7 +1952,7 @@ void _PA4(CPU *cpu) {                            /* ANDA , */
   a = _6809_ea(cpu);
   b = readMem(ram, a);
   cpu->a = _6809_and(cpu, cpu->a, b);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 4 : 4;
   }
 
 void _PA5(CPU *cpu) {                            /* BITA , */
@@ -1893,7 +1961,7 @@ void _PA5(CPU *cpu) {                            /* BITA , */
   a = _6809_ea(cpu);
   b = readMem(ram, a);
   _6809_and(cpu, cpu->a, b);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 4 : 4;
   }
 
 void _PA6(CPU *cpu) {                            /* LDA , */
@@ -1903,7 +1971,7 @@ void _PA6(CPU *cpu) {                            /* LDA , */
   if (cpu->a == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->a & 0x80) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 4 : 4;
   }
 
 void _PA7(CPU *cpu) {                            /* STA , */
@@ -1913,7 +1981,7 @@ void _PA7(CPU *cpu) {                            /* STA , */
   if (cpu->a == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->a & 0x80) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 4 : 4;
   }
 
 void _PA8(CPU *cpu) {                            /* EORA , */
@@ -1922,7 +1990,7 @@ void _PA8(CPU *cpu) {                            /* EORA , */
   a = _6809_ea(cpu);
   b = readMem(ram, a);
   cpu->a = _6809_eor(cpu, cpu->a, b);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 4 : 4;
   }
 
 void _PA9(CPU *cpu) {                            /* ADCA , */
@@ -1931,7 +1999,7 @@ void _PA9(CPU *cpu) {                            /* ADCA , */
   a = _6809_ea(cpu);
   b = readMem(ram, a);
   cpu->a = _6809_add(cpu, cpu->a, b, cpu->cc & 0x01);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 4 : 4;
   }
 
 void _PAA(CPU *cpu) {                            /* ORA , */
@@ -1940,7 +2008,7 @@ void _PAA(CPU *cpu) {                            /* ORA , */
   a = _6809_ea(cpu);
   b = readMem(ram, a);
   cpu->a = _6809_or(cpu, cpu->a, b);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 4 : 4;
   }
 
 void _PAB(CPU *cpu) {                            /* ADDA , */
@@ -1949,7 +2017,7 @@ void _PAB(CPU *cpu) {                            /* ADDA , */
   a = _6809_ea(cpu);
   b = readMem(ram, a);
   cpu->a = _6809_add(cpu, cpu->a, b, 0);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 4 : 4;
   }
 
 void _PAC(CPU *cpu) {                            /* CMPX , */
@@ -1959,7 +2027,7 @@ void _PAC(CPU *cpu) {                            /* CMPX , */
   b = readMem(ram, a++) << 8;
   b |= readMem(ram, a);
   _6809_sub16(cpu, cpu->x, b, 0);
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 6 : 7;
   }
 
 void _PAD(CPU *cpu) {                            /* JSR , */
@@ -1968,7 +2036,7 @@ void _PAD(CPU *cpu) {                            /* JSR , */
   _6809_push(ram, cpu, cpu->pc & 0xff);
   _6809_push(ram, cpu, (cpu->pc >> 8));
   cpu->pc = a;
-  cpu->ts += 5;
+  cpu->ts += (cpu->md & 1) ? 6 : 7;
   }
 
 void _PAE(CPU *cpu) {                            /* LDX , */
@@ -1979,7 +2047,7 @@ void _PAE(CPU *cpu) {                            /* LDX , */
   if (cpu->x == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->x & 0x8000) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 5 : 5;
   }
 
 void _PAF(CPU *cpu) {                            /* STX , */
@@ -1990,7 +2058,7 @@ void _PAF(CPU *cpu) {                            /* STX , */
   if (cpu->x == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->x & 0x8000) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 5 : 5;
   }
 
 void _PB0(CPU *cpu) {                            /* SUBA nnnn */
@@ -2000,7 +2068,7 @@ void _PB0(CPU *cpu) {                            /* SUBA nnnn */
   a |= readMem(ram, cpu->pc++);
   b = readMem(ram, a);
   cpu->a = _6809_sub(cpu, cpu->a, b, 0);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 4 : 5;
   }
 
 void _PB1(CPU *cpu) {                            /* CMPA nnnn */
@@ -2010,7 +2078,7 @@ void _PB1(CPU *cpu) {                            /* CMPA nnnn */
   a |= readMem(ram, cpu->pc++);
   b = readMem(ram, a);
   _6809_sub(cpu, cpu->a, b, 0);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 4 : 5;
   }
 
 void _PB2(CPU *cpu) {                            /* SBCA nnnn */
@@ -2020,7 +2088,7 @@ void _PB2(CPU *cpu) {                            /* SBCA nnnn */
   a |= readMem(ram, cpu->pc++);
   b = readMem(ram, a);
   cpu->a = _6809_sub(cpu, cpu->a, b, cpu->cc & 0x01);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 4 : 5;
   }
 
 void _PB3(CPU *cpu) {                            /* SUBD nnnn */
@@ -2032,7 +2100,7 @@ void _PB3(CPU *cpu) {                            /* SUBD nnnn */
   d = _6809_sub16(cpu, d, b, 0);
   cpu->a = (d >> 8) & 0xff;
   cpu->b = d & 0xff;
-  cpu->ts += 6;
+  cpu->ts += (cpu->md & 1) ? 5 : 7;
   }
 
 void _PB4(CPU *cpu) {                            /* ANDA nnnn */
@@ -2042,7 +2110,7 @@ void _PB4(CPU *cpu) {                            /* ANDA nnnn */
   a |= readMem(ram, cpu->pc++);
   b = readMem(ram, a);
   cpu->a = _6809_and(cpu, cpu->a, b);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 4 : 5;
   }
 
 void _PB5(CPU *cpu) {                            /* BITA nnnn */
@@ -2052,7 +2120,7 @@ void _PB5(CPU *cpu) {                            /* BITA nnnn */
   a |= readMem(ram, cpu->pc++);
   b = readMem(ram, a);
   _6809_and(cpu, cpu->a, b);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 4 : 5;
   }
 
 void _PB6(CPU *cpu) {                            /* LDA nnnn */
@@ -2063,7 +2131,7 @@ void _PB6(CPU *cpu) {                            /* LDA nnnn */
   if (cpu->a == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->a & 0x80) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 4 : 5;
   }
 
 void _PB7(CPU *cpu) {                            /* STA nnnn */
@@ -2074,7 +2142,7 @@ void _PB7(CPU *cpu) {                            /* STA nnnn */
   if (cpu->a == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->a & 0x80) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 4 : 5;
   }
 
 void _PB8(CPU *cpu) {                            /* EORA nnnn */
@@ -2084,7 +2152,7 @@ void _PB8(CPU *cpu) {                            /* EORA nnnn */
   a |= readMem(ram, cpu->pc++);
   b = readMem(ram, a);
   cpu->a = _6809_eor(cpu, cpu->a, b);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 4 : 5;
   }
 
 void _PB9(CPU *cpu) {                            /* ADCA nnnn */
@@ -2094,7 +2162,7 @@ void _PB9(CPU *cpu) {                            /* ADCA nnnn */
   a |= readMem(ram, cpu->pc++);
   b = readMem(ram, a);
   cpu->a = _6809_add(cpu, cpu->a, b, cpu->cc & 0x01);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 4 : 5;
   }
 
 void _PBA(CPU *cpu) {                            /* ORA nnnn */
@@ -2104,7 +2172,7 @@ void _PBA(CPU *cpu) {                            /* ORA nnnn */
   a |= readMem(ram, cpu->pc++);
   b = readMem(ram, a);
   cpu->a = _6809_or(cpu, cpu->a, b);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 4 : 5;
   }
 
 void _PBB(CPU *cpu) {                            /* ADDA nnnn */
@@ -2114,7 +2182,7 @@ void _PBB(CPU *cpu) {                            /* ADDA nnnn */
   a |= readMem(ram, cpu->pc++);
   b = readMem(ram, a);
   cpu->a = _6809_add(cpu, cpu->a, b, 0);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 4 : 5;
   }
 
 void _PBC(CPU *cpu) {                            /* CMPX nnnn */
@@ -2125,7 +2193,7 @@ void _PBC(CPU *cpu) {                            /* CMPX nnnn */
   b = readMem(ram, a++) << 8;
   b |= readMem(ram, a);
   _6809_sub16(cpu, cpu->x, b, 0);
-  cpu->ts += 5;
+  cpu->ts += (cpu->md & 1) ? 5 : 7;
   }
 
 void _PBD(CPU *cpu) {                            /* JSR nnnn */
@@ -2135,7 +2203,7 @@ void _PBD(CPU *cpu) {                            /* JSR nnnn */
   _6809_push(ram, cpu, cpu->pc & 0xff);
   _6809_push(ram, cpu, (cpu->pc >> 8));
   cpu->pc = a;
-  cpu->ts += 6;
+  cpu->ts += (cpu->md & 1) ? 7 : 8;
   }
 
 void _PBE(CPU *cpu) {                            /* LDX nnnn */
@@ -2147,7 +2215,7 @@ void _PBE(CPU *cpu) {                            /* LDX nnnn */
   if (cpu->x == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->x & 0x8000) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 5 : 6;
   }
 
 void _PBF(CPU *cpu) {                            /* STX nnnn */
@@ -2159,25 +2227,28 @@ void _PBF(CPU *cpu) {                            /* STX nnnn */
   if (cpu->x == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->x & 0x8000) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 5 : 6;
   }
 
 void _PC0(CPU *cpu) {                            /* SUBB # */
   byte b;
   b = readMem(ram, cpu->pc++);
   cpu->b = _6809_sub(cpu, cpu->b, b, 0);
+  cpu->ts += (cpu->md & 1) ? 2 : 2;
   }
 
 void _PC1(CPU *cpu) {                            /* CMPB # */
   byte b;
   b = readMem(ram, cpu->pc++);
   _6809_sub(cpu, cpu->b, b, 0);
+  cpu->ts += (cpu->md & 1) ? 2 : 2;
   }
 
 void _PC2(CPU *cpu) {                            /* SBCB # */
   byte b;
   b = readMem(ram, cpu->pc++);
   cpu->b = _6809_sub(cpu, cpu->b, b, cpu->cc & 0x01);
+  cpu->ts += (cpu->md & 1) ? 2 : 2;
   }
 
 void _PC3(CPU *cpu) {                            /* ADDD # */
@@ -2189,19 +2260,21 @@ void _PC3(CPU *cpu) {                            /* ADDD # */
   d = _6809_add16(cpu, cpu->b, b, 0);
   cpu->a = (d >> 8) & 0xff;
   cpu->b = d & 0xff;
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 3 : 4;
   }
 
 void _PC4(CPU *cpu) {                            /* ANDB # */
   byte b;
   b = readMem(ram, cpu->pc++);
   cpu->b = _6809_and(cpu, cpu->b, b);
+  cpu->ts += (cpu->md & 1) ? 2 : 2;
   }
 
 void _PC5(CPU *cpu) {                            /* BITB # */
   byte b;
   b = readMem(ram, cpu->pc++);
   _6809_and(cpu, cpu->b, b);
+  cpu->ts += (cpu->md & 1) ? 2 : 2;
   }
 
 void _PC6(CPU *cpu) {                            /* LDB # */
@@ -2209,6 +2282,7 @@ void _PC6(CPU *cpu) {                            /* LDB # */
   if (cpu->b == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->b & 0x80) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
+  cpu->ts += (cpu->md & 1) ? 2 : 2;
   }
 
 void _PC7(CPU *cpu) {
@@ -2218,24 +2292,28 @@ void _PC8(CPU *cpu) {                            /* EORB */
   byte b;
   b = readMem(ram, cpu->pc++);
   cpu->b = _6809_eor(cpu, cpu->b, b);
+  cpu->ts += (cpu->md & 1) ? 2 : 2;
   }
 
 void _PC9(CPU *cpu) {                            /* ADCB # */
   byte b;
   b = readMem(ram, cpu->pc++);
   cpu->b = _6809_add(cpu, cpu->b, b, cpu->cc & 0x01);
+  cpu->ts += (cpu->md & 1) ? 2 : 2;
   }
 
 void _PCA(CPU *cpu) {                            /* ORB # */
   byte b;
   b = readMem(ram, cpu->pc++);
   cpu->b = _6809_or(cpu, cpu->b, b);
+  cpu->ts += (cpu->md & 1) ? 2 : 2;
   }
 
 void _PCB(CPU *cpu) {                            /* ADDB # */
   byte b;
   b = readMem(ram, cpu->pc++);
   cpu->b = _6809_add(cpu, cpu->b, b, 0);
+  cpu->ts += (cpu->md & 1) ? 2 : 2;
   }
 
 void _PCC(CPU *cpu) {                            /* LDD # */
@@ -2244,7 +2322,7 @@ void _PCC(CPU *cpu) {                            /* LDD # */
   if ((cpu->b | cpu->a) == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->a & 0x80) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts++;
+  cpu->ts += (cpu->md & 1) ? 3 : 3;
   }
 
 void _PCD(CPU *cpu) {
@@ -2269,6 +2347,7 @@ void _PD0(CPU *cpu) {                            /* SUBB < */
   a |= readMem(ram, cpu->pc++);
   b = readMem(ram, a);
   cpu->b = _6809_sub(cpu, cpu->b, b, 0);
+  cpu->ts += (cpu->md & 1) ? 3 : 4;
   cpu->ts += 2;
   }
 
@@ -2279,7 +2358,7 @@ void _PD1(CPU *cpu) {                            /* CMPB < */
   a |= readMem(ram, cpu->pc++);
   b = readMem(ram, a);
   _6809_sub(cpu, cpu->b, b, 0);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 3 : 4;
   }
 
 void _PD2(CPU *cpu) {                            /* SBCB < */
@@ -2289,7 +2368,7 @@ void _PD2(CPU *cpu) {                            /* SBCB < */
   a |= readMem(ram, cpu->pc++);
   b = readMem(ram, a);
   cpu->b = _6809_sub(cpu, cpu->b, b, cpu->cc & 0x01);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 3 : 4;
   }
 
 void _PD3(CPU *cpu) {                            /* ADDD < */
@@ -2303,7 +2382,7 @@ void _PD3(CPU *cpu) {                            /* ADDD < */
   d = _6809_add16(cpu, d, b, 0);
   cpu->a = (d >> 8) & 0xff;
   cpu->b = d & 0xff;
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 4 : 6;
   }
 
 void _PD4(CPU *cpu) {                            /* ANDB < */
@@ -2313,7 +2392,7 @@ void _PD4(CPU *cpu) {                            /* ANDB < */
   a |= readMem(ram, cpu->pc++);
   b = readMem(ram, a);
   cpu->b = _6809_and(cpu, cpu->b, b);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 3 : 4;
   }
 
 void _PD5(CPU *cpu) {                            /* BITB < */
@@ -2323,7 +2402,7 @@ void _PD5(CPU *cpu) {                            /* BITB < */
   a |= readMem(ram, cpu->pc++);
   b = readMem(ram, a);
   _6809_and(cpu, cpu->b, b);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 3 : 4;
   }
 
 void _PD6(CPU *cpu) {                            /* LDB < */
@@ -2334,7 +2413,7 @@ void _PD6(CPU *cpu) {                            /* LDB < */
   if (cpu->b == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->b & 0x80) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 3 : 4;
   }
 
 void _PD7(CPU *cpu) {                            /* STB < */
@@ -2345,7 +2424,7 @@ void _PD7(CPU *cpu) {                            /* STB < */
   if (cpu->b == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->b & 0x80) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 3 : 4;
   }
 
 void _PD8(CPU *cpu) {                            /* EORB < */
@@ -2355,7 +2434,7 @@ void _PD8(CPU *cpu) {                            /* EORB < */
   a |= readMem(ram, cpu->pc++);
   b = readMem(ram, a);
   cpu->b = _6809_eor(cpu, cpu->b, b);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 3 : 4;
   }
 
 void _PD9(CPU *cpu) {                            /* ADCB < */
@@ -2365,7 +2444,7 @@ void _PD9(CPU *cpu) {                            /* ADCB < */
   a |= readMem(ram, cpu->pc++);
   b = readMem(ram, a);
   cpu->b = _6809_add(cpu, cpu->b, b, cpu->cc & 0x01);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 3 : 9;
   }
 
 void _PDA(CPU *cpu) {                            /* ORB < */
@@ -2375,7 +2454,7 @@ void _PDA(CPU *cpu) {                            /* ORB < */
   a |= readMem(ram, cpu->pc++);
   b = readMem(ram, a);
   cpu->b = _6809_or(cpu, cpu->b, b);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 3 : 4;
   }
 
 void _PDB(CPU *cpu) {                            /* ADDB < */
@@ -2385,7 +2464,7 @@ void _PDB(CPU *cpu) {                            /* ADDB < */
   a |= readMem(ram, cpu->pc++);
   b = readMem(ram, a);
   cpu->b = _6809_add(cpu, cpu->b, b, 0);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 3 : 4;
   }
 
 void _PDC(CPU *cpu) {                            /* LDD < */
@@ -2397,7 +2476,7 @@ void _PDC(CPU *cpu) {                            /* LDD < */
   if ((cpu->a | cpu->b) == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->a & 0x80) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 4 : 5;
   }
 
 void _PDD(CPU *cpu) {                            /* STD < */
@@ -2409,7 +2488,7 @@ void _PDD(CPU *cpu) {                            /* STD < */
   if ((cpu->a | cpu->b) == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->a & 0x80) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 4 : 5;
   }
 
 void _PDE(CPU *cpu) {                            /* LDU < */
@@ -2421,7 +2500,7 @@ void _PDE(CPU *cpu) {                            /* LDU < */
   if (cpu->u == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->u & 0x8000) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 4 : 5;
   }
 
 void _PDF(CPU *cpu) {                            /* STU < */
@@ -2433,7 +2512,7 @@ void _PDF(CPU *cpu) {                            /* STU < */
   if (cpu->u == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->u & 0x8000) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 4 : 5;
   }
 
 void _PE0(CPU *cpu) {                            /* SUBB , */
@@ -2442,7 +2521,7 @@ void _PE0(CPU *cpu) {                            /* SUBB , */
   a = _6809_ea(cpu);
   b = readMem(ram, a);
   cpu->b = _6809_sub(cpu, cpu->b, b, 0);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 4 : 4;
   }
 
 void _PE1(CPU *cpu) {                            /* CMPB , */
@@ -2451,7 +2530,7 @@ void _PE1(CPU *cpu) {                            /* CMPB , */
   a = _6809_ea(cpu);
   b = readMem(ram, a);
   _6809_sub(cpu, cpu->b, b, 0);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 4 : 4;
   }
 
 void _PE2(CPU *cpu) {                            /* SBCB , */
@@ -2460,7 +2539,7 @@ void _PE2(CPU *cpu) {                            /* SBCB , */
   a = _6809_ea(cpu);
   b = readMem(ram, a);
   cpu->b = _6809_sub(cpu, cpu->b, b, cpu->cc & 0x01);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 4 : 4;
   }
 
 void _PE3(CPU *cpu) {
@@ -2473,7 +2552,7 @@ void _PE3(CPU *cpu) {
   d = _6809_add16(cpu, d, b, 0);
   cpu->a = (d >> 8) & 0xff;
   cpu->b = d & 0xff;
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 5 : 6;
   }
 
 void _PE4(CPU *cpu) {                            /* ANDB , */
@@ -2482,7 +2561,7 @@ void _PE4(CPU *cpu) {                            /* ANDB , */
   a = _6809_ea(cpu);
   b = readMem(ram, a);
   cpu->b = _6809_and(cpu, cpu->b, b);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 4 : 4;
   }
 
 void _PE5(CPU *cpu) {                            /* BITB , */
@@ -2491,7 +2570,7 @@ void _PE5(CPU *cpu) {                            /* BITB , */
   a = _6809_ea(cpu);
   b = readMem(ram, a);
   _6809_and(cpu, cpu->b, b);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 4 : 4;
   }
 
 void _PE6(CPU *cpu) {                            /* LDB , */
@@ -2501,7 +2580,7 @@ void _PE6(CPU *cpu) {                            /* LDB , */
   if (cpu->b == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->b & 0x80) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 4 : 4;
   }
 
 void _PE7(CPU *cpu) {                            /* STB , */
@@ -2511,7 +2590,7 @@ void _PE7(CPU *cpu) {                            /* STB , */
   if (cpu->b == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->b & 0x80) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 4 : 4;
   }
 
 void _PE8(CPU *cpu) {                            /* EORB , */
@@ -2520,7 +2599,7 @@ void _PE8(CPU *cpu) {                            /* EORB , */
   a = _6809_ea(cpu);
   b = readMem(ram, a);
   cpu->b = _6809_eor(cpu, cpu->b, b);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 4 : 4;
   }
 
 void _PE9(CPU *cpu) {                            /* ADCB , */
@@ -2529,7 +2608,7 @@ void _PE9(CPU *cpu) {                            /* ADCB , */
   a = _6809_ea(cpu);
   b = readMem(ram, a);
   cpu->b = _6809_add(cpu, cpu->b, b, cpu->cc & 0x01);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 4 : 4;
   }
 
 void _PEA(CPU *cpu) {                            /* ORB , */
@@ -2538,7 +2617,7 @@ void _PEA(CPU *cpu) {                            /* ORB , */
   a = _6809_ea(cpu);
   b = readMem(ram, a);
   cpu->b = _6809_or(cpu, cpu->b, b);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 4 : 4;
  }
 
 void _PEB(CPU *cpu) {                            /* ADDB , */
@@ -2547,7 +2626,7 @@ void _PEB(CPU *cpu) {                            /* ADDB , */
   a = _6809_ea(cpu);
   b = readMem(ram, a);
   cpu->b = _6809_add(cpu, cpu->b, b, 0);
-  cpu->ts += 2;
+  cpu->ts += (cpu->md & 1) ? 4 : 4;
   }
 
 void _PEC(CPU *cpu) {                            /* LDD , */
@@ -2558,7 +2637,7 @@ void _PEC(CPU *cpu) {                            /* LDD , */
   if ((cpu->a | cpu->b) == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->a & 0x80) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 5 : 5;
   }
 
 void _PED(CPU *cpu) {                            /* STD , */
@@ -2569,7 +2648,7 @@ void _PED(CPU *cpu) {                            /* STD , */
   if ((cpu->a | cpu->b) == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->a & 0x80) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 5 : 5;
   }
 
 void _PEE(CPU *cpu) {                            /* LDU , */
@@ -2580,7 +2659,7 @@ void _PEE(CPU *cpu) {                            /* LDU , */
   if (cpu->u == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->u & 0x8000) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 5 : 5;
   }
 
 void _PEF(CPU *cpu) {                            /* STU , */
@@ -2591,7 +2670,7 @@ void _PEF(CPU *cpu) {                            /* STU , */
   if (cpu->u == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->u & 0x8000) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 5 : 5;
   }
 
 void _PF0(CPU *cpu) {                            /* SUBB nnnn */
@@ -2601,7 +2680,7 @@ void _PF0(CPU *cpu) {                            /* SUBB nnnn */
   a |= readMem(ram, cpu->pc++);
   b = readMem(ram, a);
   cpu->b = _6809_sub(cpu, cpu->b, b, 0);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 4 : 5;
   }
 
 void _PF1(CPU *cpu) {                            /* CMPB nnnn */
@@ -2611,7 +2690,7 @@ void _PF1(CPU *cpu) {                            /* CMPB nnnn */
   a |= readMem(ram, cpu->pc++);
   b = readMem(ram, a);
   _6809_sub(cpu, cpu->b, b, 0);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 4 : 5;
   }
 
 void _PF2(CPU *cpu) {                            /* SBCB nnnn */
@@ -2621,7 +2700,7 @@ void _PF2(CPU *cpu) {                            /* SBCB nnnn */
   a |= readMem(ram, cpu->pc++);
   b = readMem(ram, a);
   cpu->b = _6809_sub(cpu, cpu->b, b, cpu->cc & 0x01);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 4 : 5;
   }
 
 void _PF3(CPU *cpu) {                            /* ADDD nnnn */
@@ -2633,7 +2712,7 @@ void _PF3(CPU *cpu) {                            /* ADDD nnnn */
   d = _6809_add16(cpu, d, b, 0);
   cpu->a = (d >> 8) & 0xff;
   cpu->b = d & 0xff;
-  cpu->ts += 6;
+  cpu->ts += (cpu->md & 1) ? 5 : 7;
   }
 
 void _PF4(CPU *cpu) {                            /* ANDB nnnn */
@@ -2643,7 +2722,7 @@ void _PF4(CPU *cpu) {                            /* ANDB nnnn */
   a |= readMem(ram, cpu->pc++);
   b = readMem(ram, a);
   cpu->b = _6809_and(cpu, cpu->b, b);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 4 : 5;
   }
 
 void _PF5(CPU *cpu) {                            /* BITB nnnn */
@@ -2653,7 +2732,7 @@ void _PF5(CPU *cpu) {                            /* BITB nnnn */
   a |= readMem(ram, cpu->pc++);
   b = readMem(ram, a);
   _6809_and(cpu, cpu->b, b);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 4 : 5;
   }
 
 void _PF6(CPU *cpu) {                            /* LDB nnnn */
@@ -2664,7 +2743,7 @@ void _PF6(CPU *cpu) {                            /* LDB nnnn */
   if (cpu->b == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->b & 0x80) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 4 : 5;
   }
 
 void _PF7(CPU *cpu) {                            /* STB nnnn */
@@ -2675,7 +2754,7 @@ void _PF7(CPU *cpu) {                            /* STB nnnn */
   if (cpu->b == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->b & 0x80) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 4 : 5;
   }
 
 void _PF8(CPU *cpu) {                            /* EORB nnnn */
@@ -2685,7 +2764,7 @@ void _PF8(CPU *cpu) {                            /* EORB nnnn */
   a |= readMem(ram, cpu->pc++);
   b = readMem(ram, a);
   cpu->b = _6809_eor(cpu, cpu->b, b);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 4 : 5;
   }
 
 void _PF9(CPU *cpu) {                            /* ADCB nnnn */
@@ -2695,7 +2774,7 @@ void _PF9(CPU *cpu) {                            /* ADCB nnnn */
   a |= readMem(ram, cpu->pc++);
   b = readMem(ram, a);
   cpu->b = _6809_add(cpu, cpu->b, b, cpu->cc & 0x01);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 4 : 5;
   }
 
 void _PFA(CPU *cpu) {                            /* ORB nnnn */
@@ -2705,6 +2784,7 @@ void _PFA(CPU *cpu) {                            /* ORB nnnn */
   a |= readMem(ram, cpu->pc++);
   b = readMem(ram, a);
   cpu->b = _6809_or(cpu, cpu->b, b);
+  cpu->ts += (cpu->md & 1) ? 4 : 5;
   cpu->ts += 3;
   }
 
@@ -2715,7 +2795,7 @@ void _PFB(CPU *cpu) {                            /* ADDB nnnn */
   a |= readMem(ram, cpu->pc++);
   b = readMem(ram, a);
   cpu->b = _6809_add(cpu, cpu->b, b, 0);
-  cpu->ts += 3;
+  cpu->ts += (cpu->md & 1) ? 4 : 5;
   }
 
 void _PFC(CPU *cpu) {                            /* LDD nnnn */
@@ -2727,7 +2807,7 @@ void _PFC(CPU *cpu) {                            /* LDD nnnn */
   if ((cpu->a | cpu->b) == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->a & 0x80) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 5 : 6;
   }
 
 void _PFD(CPU *cpu) {                            /* STD nnnn */
@@ -2739,7 +2819,7 @@ void _PFD(CPU *cpu) {                            /* STD nnnn */
   if ((cpu->a | cpu->b) == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->a & 0x80) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 5 : 6;
   }
 
 void _PFE(CPU *cpu) {                            /* LDU nnnn */
@@ -2751,7 +2831,7 @@ void _PFE(CPU *cpu) {                            /* LDU nnnn */
   if (cpu->u == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->u & 0x8000) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 5 : 6;
   }
 
 void _PFF(CPU *cpu) {                            /* STU nnnn */
@@ -2763,7 +2843,7 @@ void _PFF(CPU *cpu) {                            /* STU nnnn */
   if (cpu->u == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
   if (cpu->u & 0x8000) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
   cpu->cc &= (~FLAG_V);
-  cpu->ts += 4;
+  cpu->ts += (cpu->md & 1) ? 5 : 6;
   }
 
 void cpu_prepare(CPU *cpu) {
@@ -2853,10 +2933,31 @@ void cpu_prepare(CPU *cpu) {
 
 void cpu_firq(CPU* cpu) {
   if ((cpu->cc & FLAG_F) != 0) return;
-  cpu->cc &= 0x7f;
-  _6809_push(ram, cpu, cpu->pc & 0xff);
-  _6809_push(ram, cpu, cpu->pc >> 8);
-  _6809_push(ram, cpu, cpu->cc);
+  if (use6309 && (cpu->md & 1)) {
+  cpu->cc |= 0x80;
+    _6809_push(ram, cpu, cpu->pc & 0xff);
+    _6809_push(ram, cpu, cpu->pc >> 8);
+    _6809_push(ram, cpu, cpu->u & 0xff);
+    _6809_push(ram, cpu, cpu->u >> 8);
+    _6809_push(ram, cpu, cpu->y & 0xff);
+    _6809_push(ram, cpu, cpu->y >> 8);
+    _6809_push(ram, cpu, cpu->x & 0xff);
+    _6809_push(ram, cpu, cpu->x >> 8);
+    _6809_push(ram, cpu, cpu->dp);
+    if (use6309 && (cpu->md & 1)) {
+      _6809_push(ram, cpu, cpu->f);
+      _6809_push(ram, cpu, cpu->e);
+      }
+    _6809_push(ram, cpu, cpu->b);
+    _6809_push(ram, cpu, cpu->a);
+    _6809_push(ram, cpu, cpu->cc);
+    }
+  else {
+    cpu->cc &= 0x7f;
+    _6809_push(ram, cpu, cpu->pc & 0xff);
+    _6809_push(ram, cpu, cpu->pc >> 8);
+    _6809_push(ram, cpu, cpu->cc);
+    }
   cpu->pc = readMem(ram, 0xfff6) << 8;
   cpu->pc |= readMem(ram, 0xfff7);
   cpu->halt = 0;
@@ -2874,6 +2975,10 @@ void cpu_irq(CPU* cpu) {
   _6809_push(ram, cpu, cpu->x & 0xff);
   _6809_push(ram, cpu, cpu->x >> 8);
   _6809_push(ram, cpu, cpu->dp);
+  if (use6309 && (cpu->md & 1)) {
+    _6809_push(ram, cpu, cpu->f);
+    _6809_push(ram, cpu, cpu->e);
+    }
   _6809_push(ram, cpu, cpu->b);
   _6809_push(ram, cpu, cpu->a);
   _6809_push(ram, cpu, cpu->cc);
@@ -2893,6 +2998,10 @@ void cpu_nmi(CPU* cpu) {
   _6809_push(ram, cpu, cpu->x & 0xff);
   _6809_push(ram, cpu, cpu->x >> 8);
   _6809_push(ram, cpu, cpu->dp);
+  if (use6309 && (cpu->md & 1)) {
+    _6809_push(ram, cpu, cpu->f);
+    _6809_push(ram, cpu, cpu->e);
+    }
   _6809_push(ram, cpu, cpu->b);
   _6809_push(ram, cpu, cpu->a);
   _6809_push(ram, cpu, cpu->cc);
@@ -2904,13 +3013,14 @@ void cpu_nmi(CPU* cpu) {
 void cpu_reset(CPU* cpu) {
   cpu->pc = (readMem(ram, 0xfffe) << 8) | readMem(ram, 0xffff);
   cpu->dp = 0;
+  cpu->md = 0;
   }
 
 void cpu_cycle(CPU* cpu) {
   byte cmd;
   if (cpu->halt != 0) return;
   cmd = readMem(ram, cpu->pc++);
-  cpu->ts = 2;
+  cpu->ts = 0;
   cpu->Inst[cmd](cpu);
   }
 

@@ -24,6 +24,7 @@ typedef unsigned short word;
 LINK CPU        cpu;
 LINK byte       ram[65536];
 LINK char       runDebugger;
+LINK int        use6309;
 
 extern word _6809_ea(CPU* cpu);
 extern word _6809_sub16(CPU* cpu, word a, word b, byte cry);
