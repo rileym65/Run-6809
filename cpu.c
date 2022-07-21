@@ -14,6 +14,138 @@ void writeMem(byte* ram, word address, byte value) {
   ram[address] = value;
   }
 
+void _6809_trap(CPU* cpu) {
+  }
+
+void _6809_mul16(CPU* cpu, word b) {
+  int ia,ib;
+  ia = (cpu->a << 8) | cpu->b;
+  if (ia & 0x8000) ia |= 0xffff0000;
+  ib = b;
+  if (ib & 0x8000) ib |= 0xffff0000;
+  ia *= ib;
+  cpu->a = (ia >> 24) & 0xff;
+  cpu->b = (ia >> 16) & 0xff;
+  cpu->e = (ia >> 8) & 0xff;
+  cpu->f = ia & 0xff;
+  if (ia == 0) cpu->cc |= FLAG_Z;
+    else cpu->cc &= (~FLAG_Z);
+  if (cpu->a & 0x80) cpu->cc |= FLAG_N;
+    else cpu->cc &= (~FLAG_N);
+  }
+
+void _6809_div(CPU* cpu, byte b) {
+  word a;
+  word d;
+  word m;
+  int  s;
+  if (b == 0) {
+    cpu->md |= 0x80;
+    _6809_trap(cpu);
+    return;
+    }
+  s = 0;
+  a = (cpu->a << 8) | cpu->b;
+  if (a & 0x8000) {
+    s = 1;
+    a = (a ^ 0xffff) + 1;
+    }
+  if (b & 0x80) {
+    s ^= 1;
+    b = (b ^ 0xff) + 1;
+    }
+  d = a / b;
+  m = a % b;
+  if (d >= 256) {
+    cpu->cc |= FLAG_V;
+    cpu->cc &= (~FLAG_Z);
+    cpu->cc &= (~FLAG_N);
+    cpu->cc &= (~FLAG_C);
+    cpu->ts += 12;
+    }
+  else if (d >= 128) {
+    cpu->b = d & 0xff;
+    cpu->a = m & 0xff;
+    cpu->cc |= FLAG_V;
+    cpu->cc |= FLAG_N;
+    cpu->cc &= (~FLAG_Z);
+    if (d & 1) cpu->cc |= FLAG_C;
+      else cpu->cc &= (~FLAG_C);
+    cpu->ts += 24;
+    }
+  else {
+    cpu->b = d & 0xff;
+    cpu->a = m & 0x7f;
+    if (s && cpu->b != 0) cpu->b = (cpu->b ^ 0xff) + 1;
+    if (a & 0x8000 && cpu->a != 0) cpu->a |= 0x80;
+    if (cpu->b & 0x80) cpu->cc |= FLAG_N;
+      else cpu->cc &= (~FLAG_N);
+    if (cpu->b == 0x00) cpu->cc |= FLAG_Z;
+      else cpu->cc &= (~FLAG_Z);
+    if (cpu->b & 1) cpu->cc |= FLAG_C;
+      else cpu->cc &= (~FLAG_C);
+    cpu->ts += 25;
+    }
+  }
+
+void _6809_div16(CPU* cpu, word b) {
+  dword a;
+  dword d;
+  dword m;
+  int  s;
+  if (b == 0) {
+    cpu->md |= 0x80;
+    _6809_trap(cpu);
+    return;
+    }
+  s = 0;
+  a = (cpu->a << 24) | (cpu->b << 16) | (cpu->e << 8) | cpu->f;
+  if (a & 0x80000000) {
+    s = 1;
+    a = (a ^ 0xffffffff) + 1;
+    }
+  if (b & 0x8000) {
+    s ^= 1;
+    b = (b ^ 0xffff) + 1;
+    }
+  d = a / b;
+  m = a % b;
+  if (d >= 0xffff) {
+    cpu->cc |= FLAG_V;
+    cpu->cc &= (~FLAG_Z);
+    cpu->cc &= (~FLAG_N);
+    cpu->cc &= (~FLAG_C);
+    cpu->ts += 12;
+    }
+  else if (d >= 0x7fff) {
+    cpu->a = (d & 0xffff) >> 8;
+    cpu->b = (d & 0xffff) & 0xff;
+    cpu->e = (m & 0x7fff) >> 8;
+    cpu->f = (d & 0x7fff) & 0xff;
+    cpu->cc |= FLAG_V;
+    cpu->cc |= FLAG_N;
+    cpu->cc &= (~FLAG_Z);
+    if (d & 1) cpu->cc |= FLAG_C;
+      else cpu->cc &= (~FLAG_C);
+    cpu->ts += 24;
+    }
+  else {
+    if (s && d != 0) d = (d ^ 0xffffffff) + 1;
+    cpu->a = (m & 0x7fff) >> 8;
+    cpu->b = (m & 0xffff) & 0xff;
+    cpu->e = (d & 0xffff) >> 8;
+    cpu->f = (d & 0x7fff) & 0xff;
+    if (a & 0x80000000 && cpu->a != 0) cpu->a |= 0x80;
+    if (cpu->e & 0x80) cpu->cc |= FLAG_N;
+      else cpu->cc &= (~FLAG_N);
+    if (cpu->e == 0x00 && cpu->f == 0x00) cpu->cc |= FLAG_Z;
+      else cpu->cc &= (~FLAG_Z);
+    if (cpu->b & 1) cpu->cc |= FLAG_C;
+      else cpu->cc &= (~FLAG_C);
+    cpu->ts += 25;
+    }
+  }
+
 byte _6809_add(CPU* cpu, byte a, byte b, byte cry) {
   word c;
   if ((b & 0x0f) + (a & 0x0f) > 15) cpu->cc |= FLAG_H;
@@ -50,7 +182,6 @@ byte _6809_sub(CPU* cpu, byte a, byte b, byte cry) {
   b2 = (~b) + 1;
   if (b2 & 0x80) b2 |= 0xff00;
   c = a + b2 + cry;
-GotoXY(1,27); printf("%04x\n",c);
   if ((c & 0x80) == 0x80) cpu->cc |= FLAG_N;
     else cpu->cc &= (~FLAG_N);
   if ((c & 0xff) == 0) cpu->cc |= FLAG_Z;
@@ -91,6 +222,17 @@ byte _6809_and(CPU* cpu, byte a, byte b) {
   return c;
   }
 
+word _6809_and16(CPU* cpu, word a, word b) {
+  word c;
+  c = a & b;
+  if ((c & 0x8000) == 0x8000) cpu->cc |= FLAG_N;
+    else cpu->cc &= (~FLAG_N);
+  if (c  == 0) cpu->cc |= FLAG_Z;
+    else cpu->cc &= (~FLAG_Z);
+  cpu->cc &= (~FLAG_V);
+  return c;
+  }
+
 byte _6809_eor(CPU* cpu, byte a, byte b) {
   byte c;
   c = a ^ b;
@@ -102,12 +244,34 @@ byte _6809_eor(CPU* cpu, byte a, byte b) {
   return c;
   }
 
+word _6809_eor16(CPU* cpu, word a, word b) {
+  word c;
+  c = a ^ b;
+  if ((c & 0x8000) == 0x8000) cpu->cc |= FLAG_N;
+    else cpu->cc &= (~FLAG_N);
+  if (c  == 0) cpu->cc |= FLAG_Z;
+    else cpu->cc &= (~FLAG_Z);
+  cpu->cc &= (~FLAG_V);
+  return c;
+  }
+
 byte _6809_or(CPU* cpu, byte a, byte b) {
   byte c;
   c = a ^ b;
   if ((c & 0x80) == 0x80) cpu->cc |= FLAG_N;
     else cpu->cc &= (~FLAG_N);
   if ((c & 0xff) == 0) cpu->cc |= FLAG_Z;
+    else cpu->cc &= (~FLAG_Z);
+  cpu->cc &= (~FLAG_V);
+  return c;
+  }
+
+word _6809_or16(CPU* cpu, word a, word b) {
+  byte c;
+  c = a ^ b;
+  if ((c & 0x8000) == 0x8000) cpu->cc |= FLAG_N;
+    else cpu->cc &= (~FLAG_N);
+  if (c == 0) cpu->cc |= FLAG_Z;
     else cpu->cc &= (~FLAG_Z);
   cpu->cc &= (~FLAG_V);
   return c;
@@ -134,11 +298,35 @@ byte _6809_asl(CPU* cpu, byte a) {
   return a;
   }
 
+word _6809_asl16(CPU* cpu, word a) {
+  if (a & 0x8000) cpu->cc |= FLAG_C;
+    else cpu->cc &= (~FLAG_C);
+  a <<= 1;
+  if ((a & 0x8000) == 0x8000) cpu->cc |= FLAG_N;
+    else cpu->cc &= (~FLAG_N);
+  if (a == 0) cpu->cc |= FLAG_Z;
+    else cpu->cc &= (~FLAG_Z);
+  if ((cpu->cc & 1) != ((a >> 15) & 1)) cpu->cc |= FLAG_V;
+    else cpu->cc &= (~FLAG_V);
+  return a;
+  }
+
 byte _6809_asr(CPU* cpu, byte a) {
   if (a & 0x01) cpu->cc |= FLAG_C;
     else cpu->cc &= (~FLAG_C);
   a = (a & 0x80) | ((a >> 1) & 0x7f);
   if ((a & 0x80) == 0x80) cpu->cc |= FLAG_N;
+    else cpu->cc &= (~FLAG_N);
+  if (a == 0) cpu->cc |= FLAG_Z;
+    else cpu->cc &= (~FLAG_Z);
+  return a;
+  }
+
+word _6809_asr16(CPU* cpu, word a) {
+  if (a & 0x01) cpu->cc |= FLAG_C;
+    else cpu->cc &= (~FLAG_C);
+  a = (a & 0x8000) | ((a >> 1) & 0x7fff);
+  if ((a & 0x8000) == 0x8000) cpu->cc |= FLAG_N;
     else cpu->cc &= (~FLAG_N);
   if (a == 0) cpu->cc |= FLAG_Z;
     else cpu->cc &= (~FLAG_Z);
@@ -158,11 +346,35 @@ byte _6809_lsl(CPU* cpu, byte a) {
   return a;
   }
 
+word _6809_lsl16(CPU* cpu, word a) {
+  if (a & 0x8000) cpu->cc |= FLAG_C;
+    else cpu->cc &= (~FLAG_C);
+  a <<= 1;
+  if ((a & 0x8000) == 0x8000) cpu->cc |= FLAG_N;
+    else cpu->cc &= (~FLAG_N);
+  if (a == 0) cpu->cc |= FLAG_Z;
+    else cpu->cc &= (~FLAG_Z);
+  if ((cpu->cc & 1) != ((a >> 15) & 1)) cpu->cc |= FLAG_V;
+    else cpu->cc &= (~FLAG_V);
+  return a;
+  }
+
 byte _6809_lsr(CPU* cpu, byte a) {
   if (a & 0x01) cpu->cc |= FLAG_C;
     else cpu->cc &= (~FLAG_C);
   a = ((a >> 1) & 0x7f);
   if ((a & 0x80) == 0x80) cpu->cc |= FLAG_N;
+    else cpu->cc &= (~FLAG_N);
+  if (a == 0) cpu->cc |= FLAG_Z;
+    else cpu->cc &= (~FLAG_Z);
+  return a;
+  }
+
+word _6809_lsr16(CPU* cpu, word a) {
+  if (a & 0x01) cpu->cc |= FLAG_C;
+    else cpu->cc &= (~FLAG_C);
+  a = ((a >> 1) & 0x7fff);
+  if ((a & 0x8000) == 0x8000) cpu->cc |= FLAG_N;
     else cpu->cc &= (~FLAG_N);
   if (a == 0) cpu->cc |= FLAG_Z;
     else cpu->cc &= (~FLAG_Z);
@@ -185,12 +397,42 @@ byte _6809_rol(CPU* cpu, byte a) {
   return a;
   }
 
+word _6809_rol16(CPU* cpu, word a) {
+  word c;
+  c = (a >> 15) & 0x01;
+  if ( ((a >> 15) & 0x01) ^ ((a >> 14) & 0x01) ) cpu->cc |= FLAG_V;
+    else cpu->cc &= (~FLAG_V);
+  a = a << 1;
+  if (cpu->cc & FLAG_C) a |= 1;
+  if ((a & 0x8000) == 0x8000) cpu->cc |= FLAG_N;
+    else cpu->cc &= (~FLAG_N);
+  if (a == 0) cpu->cc |= FLAG_Z;
+    else cpu->cc &= (~FLAG_Z);
+  if (c) cpu->cc |= FLAG_C;
+    else cpu->cc &= (~FLAG_C);
+  return a;
+  }
+
 byte _6809_ror(CPU* cpu, byte a) {
   byte c;
   c = (a << 7) & 0x80;
   a = a >> 1;
   if (cpu->cc & FLAG_C) a |= 0x80;
   if ((a & 0x80) == 0x80) cpu->cc |= FLAG_N;
+    else cpu->cc &= (~FLAG_N);
+  if (a == 0) cpu->cc |= FLAG_Z;
+    else cpu->cc &= (~FLAG_Z);
+  if (c) cpu->cc |= FLAG_C;
+    else cpu->cc &= (~FLAG_C);
+  return a;
+  }
+
+word _6809_ror16(CPU* cpu, word a) {
+  byte c;
+  c = (a << 15) & 0x8000;
+  a = a >> 1;
+  if (cpu->cc & FLAG_C) a |= 0x8000;
+  if ((a & 0x8000) == 0x8000) cpu->cc |= FLAG_N;
     else cpu->cc &= (~FLAG_N);
   if (a == 0) cpu->cc |= FLAG_Z;
     else cpu->cc &= (~FLAG_Z);
@@ -210,13 +452,37 @@ byte _6809_com(CPU* cpu, byte a) {
   return a;
   }
 
+word _6809_com16(CPU* cpu, word a) {
+  a = a ^ 0xffff;
+  cpu->cc |= FLAG_C;
+  cpu->cc &= (~FLAG_V);
+  if ((a & 0x8000) == 0x8000) cpu->cc |= FLAG_N;
+    else cpu->cc &= (~FLAG_N);
+  if (a == 0) cpu->cc |= FLAG_Z;
+    else cpu->cc &= (~FLAG_Z);
+  return a;
+  }
+
 byte _6809_neg(CPU* cpu, byte a) {
   if (a != 0) cpu->cc |= FLAG_C;
     else cpu->cc &= (~FLAG_C);
-  if (a != 0x80) cpu->cc |= FLAG_V;
+  if (a == 0x80) cpu->cc |= FLAG_V;
     else cpu->cc &= (~FLAG_V);
   a = (a ^ 0xff) + 1;
   if ((a & 0x80) == 0x80) cpu->cc |= FLAG_N;
+    else cpu->cc &= (~FLAG_N);
+  if (a == 0) cpu->cc |= FLAG_Z;
+    else cpu->cc &= (~FLAG_Z);
+  return a;
+  }
+
+word _6809_neg16(CPU* cpu, word a) {
+  if (a == 0) cpu->cc |= FLAG_C;
+    else cpu->cc &= (~FLAG_C);
+  if (a == 0x8000) cpu->cc |= FLAG_V;
+    else cpu->cc &= (~FLAG_V);
+  a = (a ^ 0xffff) + 1;
+  if ((a & 0x8000) == 0x8000) cpu->cc |= FLAG_N;
     else cpu->cc &= (~FLAG_N);
   if (a == 0) cpu->cc |= FLAG_Z;
     else cpu->cc &= (~FLAG_Z);
@@ -234,6 +500,17 @@ byte _6809_dec(CPU* cpu, byte a) {
   return a;
   }
 
+word _6809_dec16(CPU* cpu, word a) {
+  if (a == 0x8000) cpu->cc |= FLAG_V;
+    else cpu->cc &= (~FLAG_V);
+  a = a - 1;
+  if ((a & 0x8000) == 0x8000) cpu->cc |= FLAG_N;
+    else cpu->cc &= (~FLAG_N);
+  if (a == 0) cpu->cc |= FLAG_Z;
+    else cpu->cc &= (~FLAG_Z);
+  return a;
+  }
+
 byte _6809_inc(CPU* cpu, byte a) {
   if (a == 0x7f) cpu->cc |= FLAG_V;
     else cpu->cc &= (~FLAG_V);
@@ -241,6 +518,17 @@ byte _6809_inc(CPU* cpu, byte a) {
   if ((a & 0x80) == 0x80) cpu->cc |= FLAG_N;
     else cpu->cc &= (~FLAG_N);
   if ((a & 0xff) == 0) cpu->cc |= FLAG_Z;
+    else cpu->cc &= (~FLAG_Z);
+  return a;
+  }
+
+word _6809_inc16(CPU* cpu, word a) {
+  if (a == 0x7fff) cpu->cc |= FLAG_V;
+    else cpu->cc &= (~FLAG_V);
+  a = a + 1;
+  if ((a & 0x8000) == 0x8000) cpu->cc |= FLAG_N;
+    else cpu->cc &= (~FLAG_N);
+  if (a == 0) cpu->cc |= FLAG_Z;
     else cpu->cc &= (~FLAG_Z);
   return a;
   }
@@ -439,6 +727,9 @@ word _6809_ea(CPU* cpu) {
   return 0;
   }
 
+void _PI(CPU* cpu) {                             /* Invalid instruction */
+  }
+
 void _P0(CPU *cpu) {                             /* NEG < */
   byte b;
   word a;
@@ -450,10 +741,30 @@ void _P0(CPU *cpu) {                             /* NEG < */
   cpu->ts += (cpu->md & 1) ? 5 : 6;
   }
 
-void _P1(CPU *cpu) {
+void _P1(CPU *cpu) {                             /* OIM < */
+  byte b;
+  byte i;
+  word a;
+  i = readMem(ram, cpu->pc++);
+  a = cpu->dp << 8;
+  a |= readMem(ram, cpu->pc++);
+  b = readMem(ram, a);
+  i = _6809_or(cpu, i, b);
+  writeMem(ram, a, i);
+  cpu->ts += (cpu->md & 1) ? 6 : 6;
   }
 
-void _P2(CPU *cpu) {
+void _P2(CPU *cpu) {                             /* AIM < */
+  byte b;
+  byte i;
+  word a;
+  i = readMem(ram, cpu->pc++);
+  a = cpu->dp << 8;
+  a |= readMem(ram, cpu->pc++);
+  b = readMem(ram, a);
+  i = _6809_and(cpu, i, b);
+  writeMem(ram, a, i);
+  cpu->ts += (cpu->md & 1) ? 6 : 6;
   }
 
 void _P3(CPU *cpu) {                             /* COM < */
@@ -478,7 +789,17 @@ void _P4(CPU *cpu) {                             /* LSR < */
   cpu->ts += (cpu->md & 1) ? 5 : 6;
   }
 
-void _P5(CPU *cpu) {
+void _P5(CPU *cpu) {                             /* EIM < */
+  byte b;
+  byte i;
+  word a;
+  i = readMem(ram, cpu->pc++);
+  a = cpu->dp << 8;
+  a |= readMem(ram, cpu->pc++);
+  b = readMem(ram, a);
+  i = _6809_eor(cpu, i, b);
+  writeMem(ram, a, i);
+  cpu->ts += (cpu->md & 1) ? 6 : 6;
   }
 
 void _P6(CPU *cpu) {                             /* ROR < */
@@ -536,7 +857,16 @@ void _PA(CPU *cpu) {                             /* DEC < */
   cpu->ts += (cpu->md & 1) ? 5 : 6;
   }
 
-void _PB(CPU *cpu) {
+void _PB(CPU *cpu) {                             /* TIM < */
+  byte b;
+  byte i;
+  word a;
+  i = readMem(ram, cpu->pc++);
+  a = cpu->dp << 8;
+  a |= readMem(ram, cpu->pc++);
+  b = readMem(ram, a);
+  _6809_and(cpu, i, b);
+  cpu->ts += (cpu->md & 1) ? 6 : 6;
   }
 
 void _PC(CPU *cpu) {                             /* INC < */
@@ -601,7 +931,16 @@ void _P13(CPU *cpu) {
   cpu->ts += (cpu->md & 1) ? 3 : 4;
   }
 
-void _P14(CPU *cpu) {
+void _P14(CPU *cpu) {                            /* SEXW */
+  if (cpu->e & 0x80) {
+    cpu->a = 0xff;
+    cpu->b = 0xff;
+    }
+  else {
+    cpu->a = 0x00;
+    cpu->b = 0x00;
+    }
+  cpu->ts += (cpu->md & 1) ? 4 : 4;
   }
 
 void _P15(CPU *cpu) {
@@ -664,10 +1003,13 @@ void _P1E(CPU *cpu) {                            /* EXG */
   word tw;
   byte tb;
   byte b;
+  byte z;
   word d;
+  word w;
   word *w1,*w2;
   byte *b1,*b2;
   char a1,a2;
+  z = 0;
   b = readMem(ram, cpu->pc++);
   a1 = ((b & 0xf0) >= 0x80) ? 'B' : 'W';
   a2 = ((b & 0x0f) >= 0x08) ? 'B' : 'W';
@@ -678,10 +1020,16 @@ void _P1E(CPU *cpu) {                            /* EXG */
     case 0x30: w1 = &cpu->u; break;
     case 0x40: w1 = &cpu->s; break;
     case 0x50: w1 = &cpu->pc; break;
+    case 0x60: w1 = &w; w = (cpu->e << 8) | cpu->f; break;
+    case 0x70: w1 = &cpu->v; break;
     case 0x80: b1 = &cpu->a; break;
     case 0x90: b1 = &cpu->b; break;
     case 0xa0: b1 = &cpu->cc; break;
     case 0xb0: b1 = &cpu->dp; break;
+    case 0xc0: b1 = &z; break;
+    case 0xd0: b1 = &z; break;
+    case 0xe0: b1 = &cpu->e; break;
+    case 0xf0: b1 = &cpu->f; break;
     }
   switch (b & 0x0f) {
     case 0x00: w2 = &d; d = (cpu->a << 8) | cpu->b; break;
@@ -690,10 +1038,16 @@ void _P1E(CPU *cpu) {                            /* EXG */
     case 0x03: w2 = &cpu->u; break;
     case 0x04: w2 = &cpu->s; break;
     case 0x05: w2 = &cpu->pc; break;
+    case 0x06: w2 = &w; w = (cpu->e << 8) | cpu->f; break;
+    case 0x07: w2 = &cpu->v; break;
     case 0x08: b2 = &cpu->a; break;
     case 0x09: b2 = &cpu->b; break;
     case 0x0a: b2 = &cpu->cc; break;
     case 0x0b: b2 = &cpu->dp; break;
+    case 0x0c: b2 = &z; break;
+    case 0x0d: b2 = &z; break;
+    case 0x0e: b2 = &cpu->e; break;
+    case 0x0f: b2 = &cpu->f; break;
     }
   if (a1 == 'W' && a2 == 'W') {
     tw = *w1;
@@ -707,7 +1061,15 @@ void _P1E(CPU *cpu) {                            /* EXG */
     }
   if (a1 == 'W' && a2 == 'B') {
     tw = *b2 | 0xff00;
-    *b2 = (*w1 & 0xff);
+    if (use6309) {
+      if ((b & 0x0f) == 0x08 ||
+          (b & 0x0f) == 0x0e ||
+          (b & 0x0f) == 0x0b) *b2 = (*w1 >> 8);
+        else *b2 = (*w1 & 0xff);
+      }
+    else {
+      *b2 = (*w1 & 0xff);
+      }
     *w1 = tw;
     }
   if (a1 == 'B' && a2 == 'W') {
@@ -721,6 +1083,10 @@ void _P1E(CPU *cpu) {                            /* EXG */
   if (((b & 0xf0) == 0x00) || ((b & 0x0f) == 0x00)) {
     cpu->a = (d >> 8);
     cpu->b = d & 0xff;
+    }
+  if (((b & 0xf0) == 0x60) || ((b & 0x0f) == 0x06)) {
+    cpu->e = (w >> 8);
+    cpu->f = w & 0xff;
     }
   cpu->ts += (cpu->md & 1) ? 5 : 8;
   }
@@ -1360,10 +1726,28 @@ void _P60(CPU *cpu) {                            /* NEG , */
   cpu->ts += (cpu->md & 1) ? 6 : 6;
   }
 
-void _P61(CPU *cpu) {
+void _P61(CPU *cpu) {                            /* OIM , */
+  byte b;
+  byte i;
+  word a;
+  i = readMem(ram, cpu->pc++);
+  a = _6809_ea(cpu);
+  b = readMem(ram, a);
+  i = _6809_or(cpu, i, b);
+  writeMem(ram, a, i);
+  cpu->ts += (cpu->md & 1) ? 7 : 7;
   }
 
-void _P62(CPU *cpu) {
+void _P62(CPU *cpu) {                            /* AIM , */
+  byte b;
+  byte i;
+  word a;
+  i = readMem(ram, cpu->pc++);
+  a = _6809_ea(cpu);
+  b = readMem(ram, a);
+  i = _6809_and(cpu, i, b);
+  writeMem(ram, a, i);
+  cpu->ts += (cpu->md & 1) ? 7 : 7;
   }
 
 void _P63(CPU *cpu) {                            /* COM , */
@@ -1386,7 +1770,16 @@ void _P64(CPU *cpu) {                            /* LSR , */
   cpu->ts += (cpu->md & 1) ? 6 : 6;
   }
 
-void _P65(CPU *cpu) {
+void _P65(CPU *cpu) {                            /* EIM , */
+  byte b;
+  byte i;
+  word a;
+  i = readMem(ram, cpu->pc++);
+  a = _6809_ea(cpu);
+  b = readMem(ram, a);
+  i = _6809_eor(cpu, i, b);
+  writeMem(ram, a, i);
+  cpu->ts += (cpu->md & 1) ? 7 : 7;
   }
 
 void _P66(CPU *cpu) {                            /* ROR , */
@@ -1439,7 +1832,15 @@ void _P6A(CPU *cpu) {                            /* DEC , */
   cpu->ts += (cpu->md & 1) ? 6 : 6;
   }
 
-void _P6B(CPU *cpu) {
+void _P6B(CPU *cpu) {                            /* TIM , */
+  byte b;
+  byte i;
+  word a;
+  i = readMem(ram, cpu->pc++);
+  a = _6809_ea(cpu);
+  b = readMem(ram, a);
+  _6809_and(cpu, i, b);
+  cpu->ts += (cpu->md & 1) ? 7 : 7;
   }
 
 void _P6C(CPU *cpu) {                            /* INC , */
@@ -1489,10 +1890,30 @@ void _P70(CPU *cpu) {                            /* NEG nnnn */
   cpu->ts += (cpu->md & 1) ? 6 : 7;
   }
 
-void _P71(CPU *cpu) {
+void _P71(CPU *cpu) {                            /* OIM nnnn */
+  byte b;
+  byte i;
+  word a;
+  i = readMem(ram, cpu->pc++);
+  a = readMem(ram, cpu->pc++) << 8;
+  a |= readMem(ram, cpu->pc++);
+  b = readMem(ram, a);
+  i = _6809_or(cpu, i, b);
+  writeMem(ram, a, i);
+  cpu->ts += (cpu->md & 1) ? 7 : 7;
   }
 
-void _P72(CPU *cpu) {
+void _P72(CPU *cpu) {                            /* AIM nnnn */
+  byte b;
+  byte i;
+  word a;
+  i = readMem(ram, cpu->pc++);
+  a = readMem(ram, cpu->pc++) << 8;
+  a |= readMem(ram, cpu->pc++);
+  b = readMem(ram, a);
+  i = _6809_and(cpu, i, b);
+  writeMem(ram, a, i);
+  cpu->ts += (cpu->md & 1) ? 7 : 7;
   }
 
 void _P73(CPU *cpu) {                            /* COM nnnn */
@@ -1517,7 +1938,17 @@ void _P74(CPU *cpu) {                            /* LSR nnnn */
   cpu->ts += (cpu->md & 1) ? 6 : 7;
   }
 
-void _P75(CPU *cpu) {
+void _P75(CPU *cpu) {                            /* EIM nnnn */
+  byte b;
+  byte i;
+  word a;
+  i = readMem(ram, cpu->pc++);
+  a = readMem(ram, cpu->pc++) << 8;
+  a |= readMem(ram, cpu->pc++);
+  b = readMem(ram, a);
+  i = _6809_eor(cpu, i, b);
+  writeMem(ram, a, i);
+  cpu->ts += (cpu->md & 1) ? 7 : 7;
   }
 
 void _P76(CPU *cpu) {                            /* ROR nnnn */
@@ -1575,7 +2006,16 @@ void _P7A(CPU *cpu) {                            /* DEC nnnn */
   cpu->ts += (cpu->md & 1) ? 6 : 7;
   }
 
-void _P7B(CPU *cpu) {
+void _P7B(CPU *cpu) {                            /* TIM nnnn */
+  byte b;
+  byte i;
+  word a;
+  i = readMem(ram, cpu->pc++);
+  a = readMem(ram, cpu->pc++) << 8;
+  a |= readMem(ram, cpu->pc++);
+  b = readMem(ram, a);
+  _6809_and(cpu, i, b);
+  cpu->ts += (cpu->md & 1) ? 7 : 7;
   }
 
 void _P7C(CPU *cpu) {                            /* INC nnnn */
@@ -2325,7 +2765,15 @@ void _PCC(CPU *cpu) {                            /* LDD # */
   cpu->ts += (cpu->md & 1) ? 3 : 3;
   }
 
-void _PCD(CPU *cpu) {
+void _PCD(CPU *cpu) {                            /* LDQ # */
+  cpu->a = readMem(ram, cpu->pc++);
+  cpu->b = readMem(ram, cpu->pc++);
+  cpu->e = readMem(ram, cpu->pc++);
+  cpu->f = readMem(ram, cpu->pc++);
+  if ((cpu->b | cpu->a | cpu->e | cpu->f) == 0) cpu->cc |= FLAG_Z; else cpu->cc &= (~FLAG_Z);
+  if (cpu->a & 0x80) cpu->cc |= FLAG_N; else cpu->cc &= (~FLAG_N);
+  cpu->cc &= (~FLAG_V);
+  cpu->ts += (cpu->md & 1) ? 5 : 5;
   }
 
 void _PCE(CPU *cpu) {                            /* LDU # */
@@ -2542,7 +2990,7 @@ void _PE2(CPU *cpu) {                            /* SBCB , */
   cpu->ts += (cpu->md & 1) ? 4 : 4;
   }
 
-void _PE3(CPU *cpu) {
+void _PE3(CPU *cpu) {                            /* ADDD , */
   word a;
   word b;
   word d;
@@ -2846,15 +3294,26 @@ void _PFF(CPU *cpu) {                            /* STU nnnn */
   cpu->ts += (cpu->md & 1) ? 5 : 6;
   }
 
+void cpu_prepare_6309(CPU* cpu) {
+  cpu->Inst[0x01]=_P1; cpu->Inst[0x61]=_P61; cpu->Inst[0x71]=_P71;
+  cpu->Inst[0x02]=_P2; cpu->Inst[0x62]=_P62; cpu->Inst[0x72]=_P72;
+  cpu->Inst[0x05]=_P5; cpu->Inst[0x65]=_P65; cpu->Inst[0x75]=_P75;
+  cpu->Inst[0xCD]=_PCD;
+  cpu->Inst[0x14]=_P14;
+  cpu->Inst[0x0B]=_PB;
+  cpu->Inst[0x6B]=_P6B;
+  cpu->Inst[0x7B]=_P7B;
+  }
+
 void cpu_prepare(CPU *cpu) {
-  cpu->Inst[0x00]=_P0; cpu->Inst[0x01]=_P1; cpu->Inst[0x02]=_P2; cpu->Inst[0x03]=_P3;
-  cpu->Inst[0x04]=_P4; cpu->Inst[0x05]=_P5; cpu->Inst[0x06]=_P6; cpu->Inst[0x07]=_P7;
-  cpu->Inst[0x08]=_P8; cpu->Inst[0x09]=_P9; cpu->Inst[0x0a]=_PA; cpu->Inst[0x0b]=_PB;
+  cpu->Inst[0x00]=_P0; cpu->Inst[0x01]=_PI; cpu->Inst[0x02]=_PI; cpu->Inst[0x03]=_P3;
+  cpu->Inst[0x04]=_P4; cpu->Inst[0x05]=_PI; cpu->Inst[0x06]=_P6; cpu->Inst[0x07]=_P7;
+  cpu->Inst[0x08]=_P8; cpu->Inst[0x09]=_P9; cpu->Inst[0x0a]=_PA; cpu->Inst[0x0b]=_PI;
   cpu->Inst[0x0c]=_PC; cpu->Inst[0x0d]=_PD; cpu->Inst[0x0e]=_PE; cpu->Inst[0x0f]=_PF;
 
   cpu->Inst[0x10]=_P10; cpu->Inst[0x11]=_P11; cpu->Inst[0x12]=_P12; cpu->Inst[0x13]=_P13;
-  cpu->Inst[0x14]=_P14; cpu->Inst[0x15]=_P15; cpu->Inst[0x16]=_P16; cpu->Inst[0x17]=_P17;
-  cpu->Inst[0x18]=_P18; cpu->Inst[0x19]=_P19; cpu->Inst[0x1a]=_P1A; cpu->Inst[0x1b]=_P1B;
+  cpu->Inst[0x14]=_PI;  cpu->Inst[0x15]=_PI;  cpu->Inst[0x16]=_PI;  cpu->Inst[0x17]=_PI; 
+  cpu->Inst[0x18]=_PI;  cpu->Inst[0x19]=_P19; cpu->Inst[0x1a]=_P1A; cpu->Inst[0x1b]=_PI; 
   cpu->Inst[0x1c]=_P1C; cpu->Inst[0x1d]=_P1D; cpu->Inst[0x1e]=_P1E; cpu->Inst[0x1f]=_P1F;
 
   cpu->Inst[0x20]=_P20; cpu->Inst[0x21]=_P21; cpu->Inst[0x22]=_P22; cpu->Inst[0x23]=_P23;
@@ -2865,32 +3324,32 @@ void cpu_prepare(CPU *cpu) {
   cpu->Inst[0x30]=_P30; cpu->Inst[0x31]=_P31; cpu->Inst[0x32]=_P32; cpu->Inst[0x33]=_P33;
   cpu->Inst[0x34]=_P34; cpu->Inst[0x35]=_P35; cpu->Inst[0x36]=_P36; cpu->Inst[0x37]=_P37;
   cpu->Inst[0x38]=_P38; cpu->Inst[0x39]=_P39; cpu->Inst[0x3a]=_P3A; cpu->Inst[0x3b]=_P3B;
-  cpu->Inst[0x3c]=_P3C; cpu->Inst[0x3d]=_P3D; cpu->Inst[0x3e]=_P3E; cpu->Inst[0x3f]=_P3F;
+  cpu->Inst[0x3c]=_P3C; cpu->Inst[0x3d]=_P3D; cpu->Inst[0x3e]=_PI;  cpu->Inst[0x3f]=_P3F;
 
-  cpu->Inst[0x40]=_P40; cpu->Inst[0x41]=_P41; cpu->Inst[0x42]=_P42; cpu->Inst[0x43]=_P43;
-  cpu->Inst[0x44]=_P44; cpu->Inst[0x45]=_P45; cpu->Inst[0x46]=_P46; cpu->Inst[0x47]=_P47;
-  cpu->Inst[0x48]=_P48; cpu->Inst[0x49]=_P49; cpu->Inst[0x4a]=_P4A; cpu->Inst[0x4b]=_P4B;
-  cpu->Inst[0x4c]=_P4C; cpu->Inst[0x4d]=_P4D; cpu->Inst[0x4e]=_P4E; cpu->Inst[0x4f]=_P4F;
+  cpu->Inst[0x40]=_P40; cpu->Inst[0x41]=_PI;  cpu->Inst[0x42]=_PI;  cpu->Inst[0x43]=_P43;
+  cpu->Inst[0x44]=_P44; cpu->Inst[0x45]=_PI;  cpu->Inst[0x46]=_P46; cpu->Inst[0x47]=_P47;
+  cpu->Inst[0x48]=_P48; cpu->Inst[0x49]=_P49; cpu->Inst[0x4a]=_P4A; cpu->Inst[0x4b]=_PI; 
+  cpu->Inst[0x4c]=_P4C; cpu->Inst[0x4d]=_P4D; cpu->Inst[0x4e]=_PI;  cpu->Inst[0x4f]=_P4F;
 
-  cpu->Inst[0x50]=_P50; cpu->Inst[0x51]=_P51; cpu->Inst[0x52]=_P52; cpu->Inst[0x53]=_P53;
-  cpu->Inst[0x54]=_P54; cpu->Inst[0x55]=_P55; cpu->Inst[0x56]=_P56; cpu->Inst[0x57]=_P57;
-  cpu->Inst[0x58]=_P58; cpu->Inst[0x59]=_P59; cpu->Inst[0x5a]=_P5A; cpu->Inst[0x5b]=_P5B;
-  cpu->Inst[0x5c]=_P5C; cpu->Inst[0x5d]=_P5D; cpu->Inst[0x5e]=_P5E; cpu->Inst[0x5f]=_P5F;
+  cpu->Inst[0x50]=_P50; cpu->Inst[0x51]=_PI;  cpu->Inst[0x52]=_PI;  cpu->Inst[0x53]=_P53;
+  cpu->Inst[0x54]=_P54; cpu->Inst[0x55]=_PI;  cpu->Inst[0x56]=_P56; cpu->Inst[0x57]=_P57;
+  cpu->Inst[0x58]=_P58; cpu->Inst[0x59]=_P59; cpu->Inst[0x5a]=_P5A; cpu->Inst[0x5b]=_PI; 
+  cpu->Inst[0x5c]=_P5C; cpu->Inst[0x5d]=_P5D; cpu->Inst[0x5e]=_PI;  cpu->Inst[0x5f]=_P5F;
 
-  cpu->Inst[0x60]=_P60; cpu->Inst[0x61]=_P61; cpu->Inst[0x62]=_P62; cpu->Inst[0x63]=_P63;
-  cpu->Inst[0x64]=_P64; cpu->Inst[0x65]=_P65; cpu->Inst[0x66]=_P66; cpu->Inst[0x67]=_P67;
-  cpu->Inst[0x68]=_P68; cpu->Inst[0x69]=_P69; cpu->Inst[0x6a]=_P6A; cpu->Inst[0x6b]=_P6B;
+  cpu->Inst[0x60]=_P60; cpu->Inst[0x61]=_PI;  cpu->Inst[0x62]=_PI;  cpu->Inst[0x63]=_P63;
+  cpu->Inst[0x64]=_P64; cpu->Inst[0x65]=_PI;  cpu->Inst[0x66]=_P66; cpu->Inst[0x67]=_P67;
+  cpu->Inst[0x68]=_P68; cpu->Inst[0x69]=_P69; cpu->Inst[0x6a]=_P6A; cpu->Inst[0x6b]=_PI; 
   cpu->Inst[0x6c]=_P6C; cpu->Inst[0x6d]=_P6D; cpu->Inst[0x6e]=_P6E; cpu->Inst[0x6f]=_P6F;
 
-  cpu->Inst[0x70]=_P70; cpu->Inst[0x71]=_P71; cpu->Inst[0x72]=_P72; cpu->Inst[0x73]=_P73;
-  cpu->Inst[0x74]=_P74; cpu->Inst[0x75]=_P75; cpu->Inst[0x76]=_P76; cpu->Inst[0x77]=_P77;
-  cpu->Inst[0x78]=_P78; cpu->Inst[0x79]=_P79; cpu->Inst[0x7a]=_P7A; cpu->Inst[0x7b]=_P7B;
+  cpu->Inst[0x70]=_P70; cpu->Inst[0x71]=_PI;  cpu->Inst[0x72]=_PI;  cpu->Inst[0x73]=_P73;
+  cpu->Inst[0x74]=_P74; cpu->Inst[0x75]=_PI;  cpu->Inst[0x76]=_P76; cpu->Inst[0x77]=_P77;
+  cpu->Inst[0x78]=_P78; cpu->Inst[0x79]=_P79; cpu->Inst[0x7a]=_P7A; cpu->Inst[0x7b]=_PI; 
   cpu->Inst[0x7c]=_P7C; cpu->Inst[0x7d]=_P7D; cpu->Inst[0x7e]=_P7E; cpu->Inst[0x7f]=_P7F;
 
   cpu->Inst[0x80]=_P80; cpu->Inst[0x81]=_P81; cpu->Inst[0x82]=_P82; cpu->Inst[0x83]=_P83;
-  cpu->Inst[0x84]=_P84; cpu->Inst[0x85]=_P85; cpu->Inst[0x86]=_P86; cpu->Inst[0x87]=_P87;
+  cpu->Inst[0x84]=_P84; cpu->Inst[0x85]=_P85; cpu->Inst[0x86]=_P86; cpu->Inst[0x87]=_PI; 
   cpu->Inst[0x88]=_P88; cpu->Inst[0x89]=_P89; cpu->Inst[0x8a]=_P8A; cpu->Inst[0x8b]=_P8B;
-  cpu->Inst[0x8c]=_P8C; cpu->Inst[0x8d]=_P8D; cpu->Inst[0x8e]=_P8E; cpu->Inst[0x8f]=_P8F;
+  cpu->Inst[0x8c]=_P8C; cpu->Inst[0x8d]=_P8D; cpu->Inst[0x8e]=_P8E; cpu->Inst[0x8f]=_PI; 
 
   cpu->Inst[0x90]=_P90; cpu->Inst[0x91]=_P91; cpu->Inst[0x92]=_P92; cpu->Inst[0x93]=_P93;
   cpu->Inst[0x94]=_P94; cpu->Inst[0x95]=_P95; cpu->Inst[0x96]=_P96; cpu->Inst[0x97]=_P97;
@@ -2908,9 +3367,9 @@ void cpu_prepare(CPU *cpu) {
   cpu->Inst[0xbc]=_PBC; cpu->Inst[0xbd]=_PBD; cpu->Inst[0xbe]=_PBE; cpu->Inst[0xbf]=_PBF;
 
   cpu->Inst[0xc0]=_PC0; cpu->Inst[0xc1]=_PC1; cpu->Inst[0xc2]=_PC2; cpu->Inst[0xc3]=_PC3;
-  cpu->Inst[0xc4]=_PC4; cpu->Inst[0xc5]=_PC5; cpu->Inst[0xc6]=_PC6; cpu->Inst[0xc7]=_PC7;
+  cpu->Inst[0xc4]=_PC4; cpu->Inst[0xc5]=_PC5; cpu->Inst[0xc6]=_PC6; cpu->Inst[0xc7]=_PI; 
   cpu->Inst[0xc8]=_PC8; cpu->Inst[0xc9]=_PC9; cpu->Inst[0xca]=_PCA; cpu->Inst[0xcb]=_PCB;
-  cpu->Inst[0xcc]=_PCC; cpu->Inst[0xcd]=_PCD; cpu->Inst[0xce]=_PCE; cpu->Inst[0xcf]=_PCF;
+  cpu->Inst[0xcc]=_PCC; cpu->Inst[0xcd]=_PI;  cpu->Inst[0xce]=_PCE; cpu->Inst[0xcf]=_PI; 
 
   cpu->Inst[0xd0]=_PD0; cpu->Inst[0xd1]=_PD1; cpu->Inst[0xd2]=_PD2; cpu->Inst[0xd3]=_PD3;
   cpu->Inst[0xd4]=_PD4; cpu->Inst[0xd5]=_PD5; cpu->Inst[0xd6]=_PD6; cpu->Inst[0xd7]=_PD7;
@@ -2927,6 +3386,7 @@ void cpu_prepare(CPU *cpu) {
   cpu->Inst[0xf8]=_PF8; cpu->Inst[0xf9]=_PF9; cpu->Inst[0xfa]=_PFA; cpu->Inst[0xfb]=_PFB;
   cpu->Inst[0xfc]=_PFC; cpu->Inst[0xfd]=_PFD; cpu->Inst[0xfe]=_PFE; cpu->Inst[0xff]=_PFF;
 
+  if (use6309) cpu_prepare_6309(cpu);
   cpu_prepare_10(cpu);
   cpu_prepare_11(cpu);
   }

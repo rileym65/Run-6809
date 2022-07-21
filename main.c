@@ -19,6 +19,7 @@ int main(int argc, char** argv) {
   for (i=1; i<argc; i++) {
     if (strcmp(argv[i], "-d") == 0) runDebugger = 0xff;
     else if (strcmp(argv[i], "-6309") == 0) use6309 = 0xff;
+    else if (strcmp(argv[i], "-3") == 0) use6309 = 0xff;
     else if (loadFile(argv[i])) {
       printf("Error: Could not load %s\n",argv[i]);
       return 1;

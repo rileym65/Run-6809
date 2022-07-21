@@ -279,10 +279,6 @@ void debugger_c(char*line) {
 
 
 void debugger_d(char* line) {
-  int  i,j;
-  word addr;
-  char l[70];
-  char t[6];
   if (*line == 'p' || *line == 'P') {
     line++;
     if (*line == '=') {

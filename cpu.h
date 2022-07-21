@@ -23,6 +23,7 @@ typedef struct _CPU {
   word s;
   word x;
   word y;
+  word v;
   byte a;
   byte b;
   byte e;
