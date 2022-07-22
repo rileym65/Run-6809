@@ -12,6 +12,7 @@ int loadFile(char* filename) {
   if (file == NULL) return -1;
   address = 0;
   while (fgets(line, 1023, file) != NULL) {
+    if (line[0] == '.') strcpy(line,"");
     mode = 'D';
     v = 0;
     valid = 0;

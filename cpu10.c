@@ -271,10 +271,10 @@ void _P10_30(CPU *cpu) {                         /* ADDR r,r */
     case 0x09: b2 = &cpu->b; break;
     case 0x0a: b2 = &cpu->cc; break;
     case 0x0b: b2 = &cpu->dp; break;
-    case 0x0c: b1 = &zb; break;
-    case 0x0d: b1 = &zb; break;
-    case 0x0e: b1 = &cpu->e; break;
-    case 0x0f: b1 = &cpu->f; break;
+    case 0x0c: b2 = &zb; break;
+    case 0x0d: b2 = &zb; break;
+    case 0x0e: b2 = &cpu->e; break;
+    case 0x0f: b2 = &cpu->f; break;
     }
   if (a1 == 'W' && a2 == 'W') {
     *w2 = _6809_add16(cpu, *w1, *w2, 0);
@@ -295,7 +295,7 @@ void _P10_30(CPU *cpu) {                         /* ADDR r,r */
     cpu->a = (d >> 8);
     cpu->b = d & 0xff;
     }
-  if ((b & 0x06) == 0x06) {
+  if ((b & 0x0f) == 0x06) {
     cpu->e = (w >> 8);
     cpu->f = w & 0xff;
     }
@@ -346,10 +346,10 @@ void _P10_31(CPU *cpu) {                         /* ADCR r,r */
     case 0x09: b2 = &cpu->b; break;
     case 0x0a: b2 = &cpu->cc; break;
     case 0x0b: b2 = &cpu->dp; break;
-    case 0x0c: b1 = &zb; break;
-    case 0x0d: b1 = &zb; break;
-    case 0x0e: b1 = &cpu->e; break;
-    case 0x0f: b1 = &cpu->f; break;
+    case 0x0c: b2 = &zb; break;
+    case 0x0d: b2 = &zb; break;
+    case 0x0e: b2 = &cpu->e; break;
+    case 0x0f: b2 = &cpu->f; break;
     }
   if (a1 == 'W' && a2 == 'W') {
     *w2 = _6809_add16(cpu, *w1, *w2, (cpu->cc & 1));
@@ -370,7 +370,7 @@ void _P10_31(CPU *cpu) {                         /* ADCR r,r */
     cpu->a = (d >> 8);
     cpu->b = d & 0xff;
     }
-  if ((b & 0x06) == 0x06) {
+  if ((b & 0x0f) == 0x06) {
     cpu->e = (w >> 8);
     cpu->f = w & 0xff;
     }
@@ -421,10 +421,10 @@ void _P10_32(CPU *cpu) {                         /* SUBR r,r */
     case 0x09: b2 = &cpu->b; break;
     case 0x0a: b2 = &cpu->cc; break;
     case 0x0b: b2 = &cpu->dp; break;
-    case 0x0c: b1 = &zb; break;
-    case 0x0d: b1 = &zb; break;
-    case 0x0e: b1 = &cpu->e; break;
-    case 0x0f: b1 = &cpu->f; break;
+    case 0x0c: b2 = &zb; break;
+    case 0x0d: b2 = &zb; break;
+    case 0x0e: b2 = &cpu->e; break;
+    case 0x0f: b2 = &cpu->f; break;
     }
   if (a1 == 'W' && a2 == 'W') {
     *w2 = _6809_sub16(cpu, *w2, *w1, 0);
@@ -445,7 +445,7 @@ void _P10_32(CPU *cpu) {                         /* SUBR r,r */
     cpu->a = (d >> 8);
     cpu->b = d & 0xff;
     }
-  if ((b & 0x06) == 0x06) {
+  if ((b & 0x0f) == 0x06) {
     cpu->e = (w >> 8);
     cpu->f = w & 0xff;
     }
@@ -496,10 +496,10 @@ void _P10_33(CPU *cpu) {                         /* SBCR r,r */
     case 0x09: b2 = &cpu->b; break;
     case 0x0a: b2 = &cpu->cc; break;
     case 0x0b: b2 = &cpu->dp; break;
-    case 0x0c: b1 = &zb; break;
-    case 0x0d: b1 = &zb; break;
-    case 0x0e: b1 = &cpu->e; break;
-    case 0x0f: b1 = &cpu->f; break;
+    case 0x0c: b2 = &zb; break;
+    case 0x0d: b2 = &zb; break;
+    case 0x0e: b2 = &cpu->e; break;
+    case 0x0f: b2 = &cpu->f; break;
     }
   if (a1 == 'W' && a2 == 'W') {
     *w2 = _6809_sub16(cpu, *w2, *w1, (cpu->cc & 1));
@@ -520,7 +520,7 @@ void _P10_33(CPU *cpu) {                         /* SBCR r,r */
     cpu->a = (d >> 8);
     cpu->b = d & 0xff;
     }
-  if ((b & 0x06) == 0x06) {
+  if ((b & 0x0f) == 0x06) {
     cpu->e = (w >> 8);
     cpu->f = w & 0xff;
     }
@@ -571,10 +571,10 @@ void _P10_34(CPU *cpu) {                         /* ANDR r,r */
     case 0x09: b2 = &cpu->b; break;
     case 0x0a: b2 = &cpu->cc; break;
     case 0x0b: b2 = &cpu->dp; break;
-    case 0x0c: b1 = &zb; break;
-    case 0x0d: b1 = &zb; break;
-    case 0x0e: b1 = &cpu->e; break;
-    case 0x0f: b1 = &cpu->f; break;
+    case 0x0c: b2 = &zb; break;
+    case 0x0d: b2 = &zb; break;
+    case 0x0e: b2 = &cpu->e; break;
+    case 0x0f: b2 = &cpu->f; break;
     }
   if (a1 == 'W' && a2 == 'W') {
     *w2 = _6809_and16(cpu, *w1, *w2);
@@ -595,7 +595,7 @@ void _P10_34(CPU *cpu) {                         /* ANDR r,r */
     cpu->a = (d >> 8);
     cpu->b = d & 0xff;
     }
-  if ((b & 0x06) == 0x06) {
+  if ((b & 0x0f) == 0x06) {
     cpu->e = (w >> 8);
     cpu->f = w & 0xff;
     }
@@ -646,10 +646,10 @@ void _P10_35(CPU *cpu) {                         /* ORR r,r */
     case 0x09: b2 = &cpu->b; break;
     case 0x0a: b2 = &cpu->cc; break;
     case 0x0b: b2 = &cpu->dp; break;
-    case 0x0c: b1 = &zb; break;
-    case 0x0d: b1 = &zb; break;
-    case 0x0e: b1 = &cpu->e; break;
-    case 0x0f: b1 = &cpu->f; break;
+    case 0x0c: b2 = &zb; break;
+    case 0x0d: b2 = &zb; break;
+    case 0x0e: b2 = &cpu->e; break;
+    case 0x0f: b2 = &cpu->f; break;
     }
   if (a1 == 'W' && a2 == 'W') {
     *w2 = _6809_or16(cpu, *w1, *w2);
@@ -670,7 +670,7 @@ void _P10_35(CPU *cpu) {                         /* ORR r,r */
     cpu->a = (d >> 8);
     cpu->b = d & 0xff;
     }
-  if ((b & 0x06) == 0x06) {
+  if ((b & 0x0f) == 0x06) {
     cpu->e = (w >> 8);
     cpu->f = w & 0xff;
     }
@@ -721,10 +721,10 @@ void _P10_36(CPU *cpu) {                         /* EORR r,r */
     case 0x09: b2 = &cpu->b; break;
     case 0x0a: b2 = &cpu->cc; break;
     case 0x0b: b2 = &cpu->dp; break;
-    case 0x0c: b1 = &zb; break;
-    case 0x0d: b1 = &zb; break;
-    case 0x0e: b1 = &cpu->e; break;
-    case 0x0f: b1 = &cpu->f; break;
+    case 0x0c: b2 = &zb; break;
+    case 0x0d: b2 = &zb; break;
+    case 0x0e: b2 = &cpu->e; break;
+    case 0x0f: b2 = &cpu->f; break;
     }
   if (a1 == 'W' && a2 == 'W') {
     *w2 = _6809_eor16(cpu, *w1, *w2);
@@ -745,7 +745,7 @@ void _P10_36(CPU *cpu) {                         /* EORR r,r */
     cpu->a = (d >> 8);
     cpu->b = d & 0xff;
     }
-  if ((b & 0x06) == 0x06) {
+  if ((b & 0x0f) == 0x06) {
     cpu->e = (w >> 8);
     cpu->f = w & 0xff;
     }
@@ -796,10 +796,10 @@ void _P10_37(CPU *cpu) {                         /* CMPR r,r */
     case 0x09: b2 = &cpu->b; break;
     case 0x0a: b2 = &cpu->cc; break;
     case 0x0b: b2 = &cpu->dp; break;
-    case 0x0c: b1 = &zb; break;
-    case 0x0d: b1 = &zb; break;
-    case 0x0e: b1 = &cpu->e; break;
-    case 0x0f: b1 = &cpu->f; break;
+    case 0x0c: b2 = &zb; break;
+    case 0x0d: b2 = &zb; break;
+    case 0x0e: b2 = &cpu->e; break;
+    case 0x0f: b2 = &cpu->f; break;
     }
   if (a1 == 'W' && a2 == 'W') {
     _6809_sub16(cpu, *w1, *w2, 0);

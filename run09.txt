@@ -23,8 +23,11 @@
   C--            - Disable conditional breakpoints
   CC             - Clear all conditional breakpoints
   CC=nn          - set CC register to nn
+  D=nn           - set D register to nnnn
   DP=nn          - set DP register to nn
+  E=nn           - set E register to nn (6309)
   F              - trigger FIRQ
+  F=nn           - set F register to nn (6309)
   I              - trigger IRQ
   N              - trigger NMI
   PC=addr        - set PC to addr

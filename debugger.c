@@ -45,21 +45,34 @@ void DrawScreen() {
   printf("+A-+  +B-+ +------------------------------------------------------------------+\n");
   printf("|--|  |--| |                                                                  |\n");
   printf("+--+  +--+ |                                                                  |\n");
-  printf("+-X--++CC+ |                                                                  |\n");
+  if (use6309) {
+    printf("+-X--++E-+ |                                                                  |\n");
+    printf("|----||--| |                                                                  |\n");
+    printf("+----++--+ |                                                                  |\n");
+    printf("+-Y--++F-+ |                                                                  |\n");
+    printf("|----||--| |                                                                  |\n");
+    printf("+----++--+ |                                                                  |\n");
+    printf("+-U--++MD+ |                                                                  |\n");
+    printf("|----||--| |                                                                  |\n");
+    printf("+----++--+ |                                                                  |\n");
+    }
+  else {
+    printf("+-X--+     |                                                                  |\n");
+    printf("|----|     |                                                                  |\n");
+    printf("+----+     |                                                                  |\n");
+    printf("+-Y--+     |                                                                  |\n");
+    printf("|----|     |                                                                  |\n");
+    printf("+----+     |                                                                  |\n");
+    printf("+-U--+     |                                                                  |\n");
+    printf("|----|     |                                                                  |\n");
+    printf("+----+     |                                                                  |\n");
+    }
+  printf("+-S--++DP+ |                                                                  |\n");
   printf("|----||--| |                                                                  |\n");
   printf("+----++--+ |                                                                  |\n");
-  printf("+-Y--++DP+ |                                                                  |\n");
+  printf("+-PC-++CC+ |                                                                  |\n");
   printf("|----||--| |                                                                  |\n");
-  printf("+----++--+ |                                                                  |\n");
-  printf("+-U--+     |                                                                  |\n");
-  printf("|----|     |                                                                  |\n");
-  printf("+----+     |                                                                  |\n");
-  printf("+-S--+     |                                                                  |\n");
-  printf("|----|     |                                                                  |\n");
-  printf("+----+     |                                                                  |\n");
-  printf("+-PC-+     |                                                                  |\n");
-  printf("|----|     |                                                                  |\n");
-  printf("+----+     +------------------------------------------------------------------+\n");
+  printf("+----++--+ +------------------------------------------------------------------+\n");
   printf("- - - - - - - -\n");
   printf("\n");
   printf("  -->\n");
@@ -70,9 +83,9 @@ void UpdateScreen() {
   GotoXY(2,2); printf("%02x",cpu.a);
   GotoXY(8,2); printf("%02x",cpu.b);
   GotoXY(2,5); printf("%04x",cpu.x);
-  GotoXY(8,5); printf("%02x",cpu.cc);
   GotoXY(2,8); printf("%04x",cpu.y);
-  GotoXY(8,8); printf("%02x",cpu.dp);
+  GotoXY(8,14); printf("%02x",cpu.dp);
+  GotoXY(8,17); printf("%02x",cpu.cc);
   GotoXY(2,11); printf("%04x",cpu.u);
   GotoXY(2,14); printf("%04x",cpu.s);
   GotoXY(2,17); printf("%04x",cpu.pc);
@@ -84,6 +97,11 @@ void UpdateScreen() {
   GotoXY(11,19); if (cpu.cc & FLAG_Z) printf("Z"); else printf("-");
   GotoXY(13,19); if (cpu.cc & FLAG_V) printf("V"); else printf("-");
   GotoXY(15,19); if (cpu.cc & FLAG_C) printf("C"); else printf("-");
+  if (use6309) {
+    GotoXY(8,5); printf("%02x",cpu.e);
+    GotoXY(8,8); printf("%02x",cpu.f);
+    GotoXY(8,11); printf("%02x",cpu.md);
+    }
   }
 
 void Output(char* msg) {
@@ -279,6 +297,7 @@ void debugger_c(char*line) {
 
 
 void debugger_d(char* line) {
+  word d;
   if (*line == 'p' || *line == 'P') {
     line++;
     if (*line == '=') {
@@ -290,6 +309,39 @@ void debugger_d(char* line) {
       }
     return;
     }
+  if (*line == '=') {
+    line++;
+    if (IsHex(line)) {
+      d = GetHex(line);
+      cpu.a = (d >> 8);
+      cpu.b = d & 0xff;
+      UpdateScreen();
+      }
+    }
+  }
+
+void debugger_e(char* line) {
+  if (*line == '=') {
+    line++;
+    if (IsHex(line)) {
+      cpu.e = GetHex(line);
+      UpdateScreen();
+      }
+    }
+  return;
+  }
+
+void debugger_f(char* line) {
+  if (*line == '=') {
+    line++;
+    if (IsHex(line)) {
+      cpu.f = GetHex(line);
+      UpdateScreen();
+      }
+    return;
+    }
+  cpu_firq(&cpu);
+  UpdateScreen();
   }
 
 void debugger_p(char*line) {
@@ -369,6 +421,19 @@ void debugger_t(char* line) {
   if (*line == 'c' || *line == 'C') {
     for (i=0; i<256; i++) traps[i] = 0x00;
     return;
+    }
+  }
+
+void debugger_w(char* line) {
+  word d;
+  if (*line == '=') {
+    line++;
+    if (IsHex(line)) {
+      d = GetHex(line);
+      cpu.e = (d >> 8);
+      cpu.f = d & 0xff;
+      UpdateScreen();
+      }
     }
   }
 
@@ -459,16 +524,18 @@ void Debugger() {
     if (line[0] == 'b' || line[0] == 'B') debugger_b(line+1);
     if (line[0] == 'c' || line[0] == 'C') debugger_c(line+1);
     if (line[0] == 'd' || line[0] == 'D') debugger_d(line+1);
+    if (line[0] == 'e' || line[0] == 'E') debugger_e(line+1);
+    if (line[0] == 'f' || line[0] == 'F') debugger_f(line+1);
     if (line[0] == 't' || line[0] == 'T') debugger_t(line+1);
     if (line[0] == 'a' || line[0] == 'A') debugger_a(line+1);
     if (line[0] == 's' || line[0] == 'S') debugger_s(line+1);
     if (line[0] == 'u' || line[0] == 'U') debugger_u(line+1);
+    if (line[0] == 'w' || line[0] == 'W') debugger_w(line+1);
     if (line[0] == 'x' || line[0] == 'X') debugger_x(line+1);
     if (line[0] == 'y' || line[0] == 'Y') debugger_y(line+1);
     if (line[0] == 'p' || line[0] == 'P') debugger_p(line+1);
     if (line[0] == '@') debugger_run(line+1);
     if (line[0] == 'i' || line[0] == 'I') { cpu_irq(&cpu); UpdateScreen(); }
-    if (line[0] == 'f' || line[0] == 'F') { cpu_firq(&cpu); UpdateScreen(); }
     if (line[0] == 'n' || line[0] == 'N') { cpu_nmi(&cpu); UpdateScreen(); }
     if (line[0] == 'r' || line[0] == 'R') {
       cpu_reset(&cpu);
