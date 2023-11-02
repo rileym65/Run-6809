@@ -25,6 +25,10 @@ clean:
 	-rm *.o
 	-rm $(PROJECT)
 
+install:
+	cp run09 /usr/local/bin
+	chmod a+rx /usr/local/bin/run09
+
 cpu.o:       cpu.h header.h cpu.c
 cpu10.o:     cpu.h header.h cpu10.c
 cpu11.o:     cpu.h header.h cpu11.c

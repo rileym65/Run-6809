@@ -418,6 +418,8 @@ void _P11_38(CPU *cpu) {                         /* TFM +,+ */
     if (w == 0) f = 0;
     cpu->ts += 3;
     }
+  cpu->e = 0;
+  cpu->f = 0;
   cpu->ts += (cpu->md & 1) ? 6 : 6;
   }
 
@@ -462,6 +464,8 @@ void _P11_39(CPU *cpu) {                         /* TFM -,- */
     if (w == 0) f = 0;
     cpu->ts += 3;
     }
+  cpu->e = 0;
+  cpu->f = 0;
   cpu->ts += (cpu->md & 1) ? 6 : 6;
   }
 
@@ -505,6 +509,8 @@ void _P11_3A(CPU *cpu) {                         /* TFM +, */
     if (w == 0) f = 0;
     cpu->ts += 3;
     }
+  cpu->e = 0;
+  cpu->f = 0;
   cpu->ts += (cpu->md & 1) ? 6 : 6;
   }
 
@@ -548,6 +554,8 @@ void _P11_3B(CPU *cpu) {                         /* TFM ,+ */
     if (w == 0) f = 0;
     cpu->ts += 3;
     }
+  cpu->e = 0;
+  cpu->f = 0;
   cpu->ts += (cpu->md & 1) ? 6 : 6;
   }
 
