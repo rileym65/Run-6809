@@ -1,5 +1,6 @@
 
   ?              - dump memory
+  ?addr          - dump memory from specified address
   ?C             - Show clock ticks since last clock reset
   ?C-            - Show clock ticks since last clock reset and reset
   ?P             - dump memory from PC
